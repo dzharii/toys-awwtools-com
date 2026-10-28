@@ -1,0 +1,14 @@
+export const samples=[{name:'First experiment',grid:[[3,5,2,7,4],[6,1,4,2,8],[5,3,7,6,1],[2,8,1,5,3]]},{name:'Official sample 1',grid:[[1,2],[3,4]]},{name:'Official sample 2',grid:[[6,7],[5,8]]},{name:'Official sample 3',grid:[[2,7,5]]},{name:'Blank canvas',grid:[[0,0,0],[0,0,0],[0,0,0]]}];
+export function validateGrid(grid){if(!Array.isArray(grid)||!grid.length||!Array.isArray(grid[0])||!grid[0].length)throw Error('Enter a nonempty rectangular grid.'); const n=grid[0].length;if(grid.length*n>1000)throw Error('A grid may contain at most 1,000 cells.');if(grid.some(row=>!Array.isArray(row)||row.length!==n||row.some(v=>!Number.isInteger(v)||v<0||v>1023)))throw Error('Use equal-length rows and integers from 0 to 1023.');return grid;}
+export function validPath(grid,path){const n=grid[0].length;return Array.isArray(path)&&path.length>0&&path[0]===0&&path.every((v,i)=>Number.isInteger(v)&&v>=0&&v<grid.length*n&&(!i||v===path[i-1]+n||v===path[i-1]+1&&Math.floor(v/n)===Math.floor(path[i-1]/n)));}
+export function pathXor(grid,path){const n=grid[0].length;return path.reduce((x,i)=>x^grid[Math.floor(i/n)][i%n],0);}
+export function solve(grid){validateGrid(grid); const m=grid.length,n=grid[0].length,total=m*n,states=new Uint8Array(total*1024),parents=new Uint8Array(total*1024);states[grid[0][0]]=1;
+ for(let i=1;i<total;i++){const value=grid[Math.floor(i/n)][i%n],out=i*1024; for(const [p,dir] of [[i-n,1],[i%n?i-1:-1,2]]){if(p<0)continue;const base=p*1024;for(let x=0;x<1024;x++)if(states[base+x]){const y=x^value;if(!states[out+y]){states[out+y]=1;parents[out+y]=dir;}}}}
+ const reachable=i=>{const a=[];for(let x=0;x<1024;x++)if(states[i*1024+x])a.push(x);return a;};
+ const reconstruct=(i,x)=>{if(!states[i*1024+x])return [];const path=[];while(true){path.push(i);if(!i)break;const d=parents[i*1024+x];x^=grid[Math.floor(i/n)][i%n];i-=d===1?n:1;}return path.reverse();};
+ const transitions=i=>{if(i===0)return [{from:-1,x:0,value:grid[0][0],y:grid[0][0]}];const a=[],value=grid[Math.floor(i/n)][i%n];for(const p of [i-n,i%n?i-1:-1])if(p>=0)for(const x of reachable(p))a.push({from:p,x,value,y:x^value});return a;};
+ return {states,parents,reachable,reconstruct,transitions,min:reachable(total-1)[0],bytes:states.byteLength+parents.byteLength};}
+export const binary=x=>x.toString(2).padStart(10,'0');
+export function decodeExperiment(hash){const data=JSON.parse(decodeURIComponent(escape(atob(hash.replace(/^#experiment=/,'')))));validateGrid(data.grid);if(!validPath(data.grid,data.path))data.path=[0];return {grid:data.grid,path:data.path};}
+export function encodeExperiment(grid,path){return '#experiment='+btoa(unescape(encodeURIComponent(JSON.stringify({grid,path}))));}
+export function makeExport(cases,includeExpected=false){return {version:1,cases:cases.map(c=>{const entry={name:c.name,grid:c.grid,path:c.path};if(includeExpected)entry.expected=solve(c.grid).min;return entry;})};}

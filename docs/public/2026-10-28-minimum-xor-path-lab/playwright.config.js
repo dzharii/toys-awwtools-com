@@ -1,0 +1,2 @@
+import {defineConfig} from '@playwright/test';
+export default defineConfig({testDir:'./tests',testMatch:'**/*.spec.js',timeout:45000,workers:1,reporter:[['list'],['json',{outputFile:'evidence/playwright-results.json'}]],use:{baseURL:process.env.LAB_URL||'http://127.0.0.1:3000',viewport:{width:1440,height:900},launchOptions:{args:['--no-sandbox','--disable-dev-shm-usage']},screenshot:'only-on-failure',trace:'retain-on-failure'},webServer:process.env.LAB_URL?undefined:{command:'node dev.mjs',url:'http://127.0.0.1:3000',reuseExistingServer:true,timeout:10000}});
