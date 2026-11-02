@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#141f35">
+  <title>Au café des Tilleuls | French pixel story</title>
+  <style>
+:root{color-scheme:dark;--bg:#101a2d;--panel:#19263d;--panel2:#20324b;--edge:#405475;--cream:#fff3d6;--text:#f4eddf;--muted:#b4c3d4;--accent:#ffb876;--mint:#b7ead8;--blue:#78b9d1;--shadow:#070e1b}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:radial-gradient(ellipse 90% 60% at 50% 0%,#253454 0%,var(--bg) 90%);color:var(--text);font:400 1rem/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+button,input{font:inherit}
+button{cursor:pointer;white-space:nowrap;border-radius:9px;border:1px solid #5c718b;background:#2a3d55;color:#fff1d8;padding:10px 15px;transition:background .12s,transform .12s}
+button:not(:disabled):hover{background:#395372}
+button:not(:disabled):active{transform:translateY(1px)}
+button:disabled{opacity:.38;cursor:default}
+:focus-visible{outline:3px solid #f9c77d;outline-offset:3px}
+.shell{max-width:1540px;margin:0 auto;padding:17px 26px 24px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:0 2px 17px}
+.brand{display:flex;align-items:center;gap:15px}
+.pixel-star{color:var(--accent);font-size:2.3rem;line-height:1;filter:drop-shadow(3px 3px 0px #854752)}
+h1{font-size:1.35rem;line-height:1.2;margin:0;font-weight:790;letter-spacing:.005em}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:.87rem}
+.header-tools{display:flex;gap:8px}
+.tool-button{background:transparent;border-color:#40526d;font-size:.88rem}
+.layout{display:grid;grid-template-columns:226px minmax(0,1fr);gap:15px;align-items:start}
+.map{background:linear-gradient(180deg,#1e2c45,#1b283f);border:1px solid #364763;border-radius:14px;padding:17px 12px 22px;box-shadow:0 12px 24px #070e1b36;min-height:650px}
+.map-title{font-size:.91rem;font-weight:750;letter-spacing:.025em;margin:2px 7px 13px;display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.small-label{font-size:.58rem;letter-spacing:.12em;color:#8facc0;font-weight:700}
+.map-divider{border-top:1px dashed #465772;margin:17px 5px}
+.map-note{margin:-4px 7px 9px;color:#afbed2;font-size:.82rem;line-height:1.4}
+.map-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:transparent;border-radius:8px;padding:11px 9px;color:#d1ddeb;white-space:normal;font-size:.86rem}
+.map-item .dot{width:11px;height:11px;display:block;flex:none;background:#526b83;box-shadow:3px 3px 0 #112037}
+.map-item.active{background:#34516a;color:#fff8dc}
+.map-item.active .dot{background:#f0b67f}
+.map-item.branch-item{align-items:flex-start;padding:9px}
+.branch-item .branch-sym{color:#f2bb7c;font-family:monospace;font-weight:900;font-size:1.1rem;line-height:1.1}
+.branch-name{font-weight:650;display:block}
+.branch-subtitle{font-size:.73rem;color:#acc1d2;display:block;margin-top:3px}
+.player{background:#1a2940;border:1px solid #425477;border-radius:14px;box-shadow:0 15px 40px #030a16a6;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.34fr) minmax(330px,1fr);grid-template-rows:auto auto auto auto auto;align-items:stretch}
+.slide-top{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;background:#263c57;padding:10px 16px;border-bottom:1px solid #476482}
+.location{color:#f2cd92;font:700 .73rem/1.3 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.11em;text-transform:uppercase}
+.step-label{color:#d1deeb;font:.8rem ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums}
+.illustration{position:relative;min-height:366px;display:flex;align-items:center;justify-content:center;background:#2f4960;overflow:hidden;isolation:isolate;border-right:1px solid #475971}
+.illustration svg{display:block;width:100%;height:auto;aspect-ratio:16/10;max-height:100%;shape-rendering:crispEdges;image-rendering:pixelated}
+.illustration:before{content:'';inset:0;position:absolute;pointer-events:none;background:linear-gradient(to bottom,#ffffff06,transparent 50%,#0d19221e)}
+.slide-body{min-width:0;min-height:366px;display:flex;flex-direction:column;padding:22px 25px;background:linear-gradient(145deg,#1f304a,#192840)}
+.speaker-line{display:flex;align-items:center;gap:10px;color:#bed4e9;font-size:.98rem;font-weight:760}
+.avatar{display:inline-grid;place-items:center;width:36px;height:36px;border:2px solid #eed1a0;background:#517897;color:#fff4d8;font-weight:800;box-shadow:3px 3px 0 #111d30}
+.avatar.barista{background:#b76765;border-color:#ffcf98}
+.phrase-kind{margin-left:auto;color:#98afc3;font-size:.74rem;font-weight:500;text-align:right}
+.french{font-size:clamp(1.47rem,2.3vw,2.25rem);line-height:1.3;letter-spacing:-.015em;font-weight:700;color:var(--cream);margin:28px 0 18px;overflow-wrap:anywhere}
+.reading{font-family:ui-monospace,"DejaVu Sans",monospace;font-size:clamp(1rem,1.25vw,1.16rem);line-height:1.65;color:#b3e4d9;overflow-wrap:anywhere}
+.translation{font-size:1.07rem;line-height:1.55;color:#fff0ba;margin-top:13px;padding-left:12px;border-left:3px solid #d49d66}
+.tip{font-size:.97rem;line-height:1.5;color:#b2c2d5;padding-top:16px;margin:auto 0 0}
+.branch-prompt{margin-top:15px;padding:12px 12px;background:#324862;border:1px dashed #a78564;border-radius:9px}
+.branch-prompt .prompt-title{font-size:.83rem;color:#b9c9d8;margin-bottom:7px}
+.branch-button{font-size:.83rem;padding:8px 11px;background:#76534e;border-color:#d69d69;white-space:normal;text-align:left}
+.controls{grid-column:1/-1;padding:12px 16px 5px;display:flex;justify-content:space-between;gap:12px;border-top:1px solid #445b74;flex-wrap:wrap}
+.transport,.voice-controls{display:flex;gap:8px;align-items:center}
+.primary{background:#edab6e;color:#263047;border-color:#ffd09b;font-weight:800}
+.primary:not(:disabled):hover{background:#ffcb90}
+.audio-button{background:#315a59;border-color:#74b4a2;color:#edfff8;font-weight:750}
+.audio-button:not(:disabled):hover{background:#3a736b}
+.secondary{padding-left:13px;padding-right:13px}
+.options{grid-column:1/-1;display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;padding:15px 16px 6px;color:#d2deea;font-size:.89rem}
+.options label{display:flex;align-items:center;gap:7px;cursor:pointer}
+input[type=checkbox]{accent-color:#efbd80;width:16px;height:16px}
+.rate-line{grid-column:1/-1;display:flex;align-items:center;gap:11px;min-height:54px;padding:0 16px 12px;font-size:.84rem;color:#aebfd3;flex-wrap:wrap}
+.rate-line input{accent-color:#f2b87c;width:115px}
+#speed-output{font-variant-numeric:tabular-nums;color:#ead5b7}
+#audio-note{margin-left:auto;color:#bbd7cf;max-width:50%;text-align:right}
+.keyboard-hint{font-size:.82rem;color:#9cacc1;margin:15px 3px 0}
+dialog{background:#182943;color:#f5eddf;border:1px solid #6f8299;border-radius:13px;width:min(850px,calc(100vw - 24px));max-height:88vh;padding:22px 26px;box-shadow:0 25px 80px #000b}
+dialog::backdrop{background:#071020cf;backdrop-filter:blur(3px)}
+.transcript-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #3b5670;padding-bottom:14px}
+.transcript-heading h2{margin:0;font-size:1.45rem}
+.transcript-heading p{color:#b0bfd0;font-size:.92rem;margin:4px 0 0}
+.close{padding:8px 12px}
+.transcript-group{font-size:1.1rem;color:#edbd89;margin:22px 0 10px}
+.transcript-row{display:block;width:100%;text-align:left;white-space:normal;padding:13px 10px;border:0;border-bottom:1px solid #34445d;border-radius:0;background:transparent}
+.transcript-row:hover{background:#30445d}
+.transcript-row .t-speaker{color:#94d6ca;font-size:.76rem;font-weight:750;display:block}
+.transcript-row .t-fr{font-size:1.06rem;line-height:1.4;color:#f5ebdb;display:block;margin:5px 0}
+.transcript-row .t-en{font-size:.87rem;color:#aebfd4;display:block}
+/* Scene animation is decorative; text and drawings remain available when motion is off. */
+.steam{animation:steam-rise 2.3s ease-in-out infinite;transform-origin:center}
+.steam:nth-of-type(2){animation-delay:.6s}
+.window-glow{animation:glimmer 3.6s ease-in-out infinite}
+.wave{animation:wave 2.4s ease-in-out infinite;transform-origin:center 75%}
+.bob{animation:bob 2.6s ease-in-out infinite}
+@keyframes steam-rise{0%,100%{transform:translateY(2px);opacity:.4}50%{transform:translateY(-5px);opacity:.85}}
+@keyframes glimmer{0%,100%{opacity:.8}50%{opacity:1}}
+@keyframes wave{0%,100%{transform:rotate(0)}35%{transform:rotate(-8deg)}70%{transform:rotate(3deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+body.reduce-motion *,body.reduce-motion *:before,body.reduce-motion *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+@media(max-width:1150px){.layout{grid-template-columns:200px minmax(0,1fr)}.player{grid-template-columns:minmax(0,1fr) minmax(280px,.93fr)}.illustration{min-height:365px}.slide-body{padding:19px}.french{font-size:clamp(1.35rem,2.25vw,2rem)}}
+@media(max-width:920px){.shell{padding:12px}.layout{display:block}.map{display:none;min-height:0;margin-bottom:12px}.map.open{display:block}.player{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.illustration,.slide-body{min-height:330px}.options{gap:10px}}
+@media(max-width:660px){.topbar{align-items:flex-start;gap:10px}.brand{gap:8px}.pixel-star{font-size:1.65rem}h1{font-size:1.08rem}.brand p{font-size:.72rem}.header-tools{flex-direction:column}.tool-button{font-size:.74rem;padding:7px 9px}.player{display:block}.slide-top{padding:9px 12px}.illustration{min-height:0}.illustration svg{aspect-ratio:16/10}.slide-body{min-height:290px;padding:18px 16px 20px}.french{font-size:1.7rem;margin:19px 0 14px}.reading{font-size:1rem}.tip{padding-top:20px}.controls{padding:12px;gap:8px}.transport{flex:1;justify-content:space-between}.voice-controls{width:100%}.voice-controls .audio-button{flex:1}.options{padding:9px 12px;gap:8px 13px}.options label{font-size:.79rem}.rate-line{padding:4px 12px 13px}#audio-note{width:100%;max-width:100%;margin-left:0;text-align:left}.keyboard-hint{line-height:1.55}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.scene-labels{position:absolute;bottom:11px;left:12px;right:12px;display:flex;align-items:flex-end;justify-content:center;gap:7px;pointer-events:none}
+.scene-label{background:#16263ee8;border:2px solid #d8a674;color:#fff1d9;padding:5px 9px;box-shadow:3px 3px 0 #172132;min-width:0;text-align:center;font-size:.82rem;font-weight:720}
+.scene-label small{display:block;font-size:.7rem;line-height:1.25;font-weight:450;color:#c5d7e4;margin-top:1px}
+@media(max-width:660px){.scene-label{font-size:.69rem;padding:3px 5px}.scene-label small{font-size:.63rem}}
+.illustration svg{animation:scene-enter .24s steps(4,end) both}
+.arriving{animation:arrive 2.3s steps(7,end) both}
+@keyframes scene-enter{from{opacity:.45}to{opacity:1}}
+@keyframes arrive{from{transform:translateX(-28px)}to{transform:translateX(0)}}
+@media(max-width:660px){.transport{flex-wrap:wrap;justify-content:flex-start}.transport button{font-size:.91rem;padding:10px 12px}#return{flex-basis:100%;text-align:center}}
+
+</style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="pixel-star" aria-hidden="true">✦</span><div><h1>Au café des Tilleuls</h1><p>French conversation · beginner / early A2</p></div></div>
+      <div class="header-tools"><button class="tool-button" id="show-map" type="button" aria-controls="map" aria-expanded="false">Story map</button><button class="tool-button" id="transcript-btn" type="button" aria-controls="transcript" aria-expanded="false">Full transcript</button></div>
+    </header>
+
+    <main class="layout">
+      <aside class="map" id="map" aria-label="Story navigation">
+        <div class="map-title">Story map <span class="small-label">READ IN ORDER</span></div>
+        <nav id="chapter-list" aria-label="Main story chapters"></nav>
+        <div class="map-divider"></div>
+        <div class="map-title">Side scenes <span class="small-label">OPTIONAL</span></div>
+        <p class="map-note">Explore any detour, then return to the same point in the story.</p>
+        <nav id="branch-list" aria-label="Scripted side scenes"></nav>
+      </aside>
+
+      <section class="player" aria-label="French conversation presentation">
+        <div class="slide-top"><div class="location" id="location">MAIN STORY</div><div class="step-label" id="progress">01 / 19</div></div>
+        <div class="illustration" id="art" role="img" aria-label="Pixel-art illustration of a French café"></div>
+        <div class="slide-body">
+          <div class="speaker-line"><span id="avatar" class="avatar">V</span><span id="speaker">Vous</span><span class="phrase-kind" id="chapter-label">Arriving</span></div>
+          <p class="french" id="french" lang="fr">Bonjour, madame !</p>
+          <div class="reading" id="reading" lang="fr-fonipa">/bɔ̃.ʒuʁ ma.dam/</div>
+          <div class="translation" id="translation" lang="en" hidden></div>
+          <p class="tip" id="tip"></p>
+          <div class="branch-prompt" id="branch-prompt" hidden></div>
+        </div>
+        <div class="controls">
+          <div class="transport"><button id="prev" type="button" aria-label="Previous scripted line">← Previous</button><button id="next" class="primary" type="button" aria-label="Next scripted line">Next →</button><button id="return" type="button" hidden>↩ Back to story</button></div>
+          <div class="voice-controls"><button id="listen" type="button" class="audio-button">▶ Hear French</button><button id="stop" type="button" class="secondary" aria-label="Stop speaking" disabled>■</button></div>
+        </div>
+        <div class="options"><label><input id="english-toggle" type="checkbox"> Show English</label><label><input id="ipa-toggle" type="checkbox" checked> Show pronunciation (IPA)</label><label><input id="auto-toggle" type="checkbox"> Read next lines aloud</label><label><input id="motion-toggle" type="checkbox"> Reduce motion</label></div>
+        <div class="rate-line"><label for="speed">Speech rate</label><input id="speed" type="range" min="0.65" max="1.15" step="0.05" value="0.85"><output id="speed-output" for="speed">0.85×</output><span id="audio-note" role="status" aria-live="polite"></span></div>
+      </section>
+    </main>
+    <p class="keyboard-hint">Use ← and → to move between scripted lines. Click a side scene to explore it without changing the main story.</p>
+  </div>
+  <dialog id="transcript" aria-labelledby="transcript-title">
+    <div class="transcript-heading"><div><h2 id="transcript-title">Conversation transcript</h2><p>All dialogue is pre-written. Select a line to jump to it.</p></div><button id="close-transcript" type="button" class="close" aria-label="Close transcript">✕</button></div>
+    <div id="transcript-list"></div>
+  </dialog>
+<script>
+/* Edit this file to change the conversation. Every line is pre-scripted.
+   'after' attaches a read-only side scene to a main-story line. */
+window.CAFE_STORY = {
+  title: 'Au café des Tilleuls',
+  setting: 'A fictional café in a French city',
+  branches: [
+    { id:'coffee', title:'Coffee talk', subtitle:'Cortado, noisette, café crème', after:'m03', theme:'coffee' },
+    { id:'pastry', title:'The pastry case', subtitle:'Croissant or pain au chocolat?', after:'m07', theme:'pastry' },
+    { id:'recipe', title:'A special tart', subtitle:'Learn more about the recipe', after:'m10', theme:'tart' },
+    { id:'places', title:'Around the corner', subtitle:'Bookshop and market', after:'m16', theme:'street' }
+  ],
+  chapters: [
+    {name:'Arriving', id:'m01'},
+    {name:'Ordering coffee', id:'m03'},
+    {name:'Pastries', id:'m06'},
+    {name:'A recommendation', id:'m08'},
+    {name:'Local tips', id:'m14'},
+    {name:'Goodbye', id:'m18'}
+  ],
+  main: [
+    {id:'m01',who:'you',fr:'Bonjour, madame !',ipa:'/bɔ̃.ʒuʁ ma.dam/',en:'Hello, ma’am!',tip:'Bonjour is the safe greeting at any time of day.',scene:'outside'},
+    {id:'m02',who:'lily',fr:'Bonjour ! Bienvenue ! Vous désirez ?',ipa:'/bɔ̃.ʒuʁ bjɛ̃.və.ny vu de.zi.ʁe/',en:'Hello! Welcome! What would you like?',tip:'Vous désirez ? is a common, polite question in a shop or café.',scene:'counter'},
+    {id:'m03',who:'you',fr:'Est-ce que vous faites des cortados ?',ipa:'/ɛs kə vu fɛt de kɔʁ.ta.do/',en:'Do you make cortados?',tip:'Est-ce que turns a statement into a yes/no question.',scene:'coffee'},
+    {id:'m04',who:'lily',fr:'Oui, bien sûr. Un cortado, c’est un espresso avec un peu de lait chaud.',ipa:'/wi bjɛ̃ syʁ œ̃ kɔʁ.ta.do sɛ.t‿œ̃ ɛs.pʁɛ.so a.vɛ.k‿œ̃ pø də lɛ ʃo/',en:'Yes, of course. A cortado is an espresso with a little warm milk.',tip:'Un peu de = a little (of).',scene:'coffee'},
+    {id:'m05',who:'you',fr:'Parfait. Je vais prendre un cortado, s’il vous plaît.',ipa:'/paʁ.fɛ ʒə vɛ pʁɑ̃dʁ œ̃ kɔʁ.ta.do sil vu plɛ/',en:'Perfect. I’ll have a cortado, please.',tip:'Je vais prendre is a natural way to order.',scene:'coffee'},
+    {id:'m06',who:'lily',fr:'Très bien ! Vous voulez quelque chose à manger ?',ipa:'/tʁɛ bjɛ̃ vu vu.le kɛlk ʃoz a mɑ̃.ʒe/',en:'Very good! Would you like something to eat?',tip:'Quelque chose = something.',scene:'pastry'},
+    {id:'m07',who:'you',fr:'Qu’est-ce que vous me conseillez comme pâtisserie ?',ipa:'/kɛs kə vu mə kɔ̃.sɛ.je kɔm pɑ.tis.ʁi/',en:'What pastry would you recommend?',tip:'Vous me conseillez… ? = Do you recommend … to me?',scene:'pastry'},
+    {id:'m08',who:'lily',fr:'J’aime beaucoup notre tarte au citron. Elle est faite maison.',ipa:'/ʒɛm bo.ku nɔtʁ taʁt o si.tʁɔ̃ ɛ.l‿ɛ fɛt mɛ.zɔ̃/',en:'I really like our lemon tart. It is homemade.',tip:'Faite maison = homemade; it agrees with the feminine noun tarte.',scene:'tart'},
+    {id:'m09',who:'you',fr:'Pourquoi est-ce qu’elle est spéciale ?',ipa:'/puʁ.kwa ɛs kɛ.l‿ɛ spe.sjal/',en:'Why is it special?',tip:'Pourquoi = why.',scene:'tart'},
+    {id:'m10',who:'lily',fr:'La crème est légère et la pâte est croustillante.',ipa:'/la kʁɛm ɛ le.ʒɛʁ e la pɑt ɛ kʁus.ti.jɑ̃t/',en:'The filling is light and the crust is crispy.',tip:'Légère = light; croustillante = crispy.',scene:'tart'},
+    {id:'m11',who:'you',fr:'Ça a l’air délicieux. Je vais en prendre une part.',ipa:'/sa a lɛʁ de.li.sjø ʒə vɛ.z‿ɑ̃ pʁɑ̃dʁ yn paʁ/',en:'That sounds delicious. I’ll have a slice.',tip:'Ça a l’air … = That looks / sounds …',scene:'tart'},
+    {id:'m12',who:'you',fr:'Et vous, quel café préférez-vous ?',ipa:'/e vu kɛl ka.fe pʁe.fe.ʁe vu/',en:'And you, which coffee do you prefer?',tip:'Et vous ? = And you? Use vous to address the barista politely.',scene:'counter'},
+    {id:'m13',who:'lily',fr:'Moi, j’aime le café noisette, avec une petite touche de lait.',ipa:'/mwa ʒɛm lə ka.fe nwa.zɛt a.vɛ.k‿yn pə.tit tuʃ də lɛ/',en:'I like a café noisette, with a little touch of milk.',tip:'Café noisette is an espresso with a small amount of milk, not hazelnut-flavored coffee.',scene:'coffee'},
+    {id:'m14',who:'you',fr:'Ah, intéressant ! Je loge dans un hôtel tout près d’ici.',ipa:'/a ɛ̃.te.ʁe.sɑ̃ ʒə lɔʒ dɑ̃.z‿œ̃.n‿o.tɛl tu pʁɛ di.si/',en:'Ah, interesting! I’m staying in a hotel very close to here.',tip:'Je loge = I am staying (somewhere).',scene:'street'},
+    {id:'m15',who:'you',fr:'Vous me conseillez un endroit à visiter dans le quartier ?',ipa:'/vu mə kɔ̃.sɛ.je œ̃.n‿ɑ̃.dʁwa a vi.zi.te dɑ̃ lə kaʁ.tje/',en:'Can you recommend a place to visit in the neighborhood?',tip:'Un endroit = a place; le quartier = the neighborhood.',scene:'street'},
+    {id:'m16',who:'lily',fr:'Il y a un joli jardin à cinq minutes à pied. Et un petit marché le dimanche.',ipa:'/i.l‿ja œ̃ ʒɔ.li ʒaʁ.dɛ̃ a sɛ̃k mi.nyt a pje e œ̃ pə.ti maʁ.ʃe lə di.mɑ̃ʃ/',en:'There’s a pretty garden five minutes away on foot. And a small market on Sundays.',tip:'Il y a = there is / there are; à pied = on foot.',scene:'street'},
+    {id:'m17',who:'you',fr:'Super ! Je vais voir le jardin. Merci beaucoup !',ipa:'/sy.pɛʁ ʒə vɛ vwaʁ lə ʒaʁ.dɛ̃ mɛʁ.si bo.ku/',en:'Great! I’ll visit the garden. Thank you very much!',tip:'Je vais voir = I’m going to see.',scene:'street'},
+    {id:'m18',who:'lily',fr:'Avec plaisir ! Voilà votre cortado et votre tarte. Bonne journée !',ipa:'/a.vɛk ple.ziʁ vwa.la vɔtʁ kɔʁ.ta.do e vɔtʁ taʁt bɔn ʒuʁ.ne/',en:'My pleasure! Here are your cortado and tart. Have a nice day!',tip:'Voilà = here is / here are; bonne journée = have a good day.',scene:'served'},
+    {id:'m19',who:'you',fr:'Merci, à vous aussi !',ipa:'/mɛʁ.si a vu o.si/',en:'Thank you, you too!',tip:'À vous aussi is a polite response to a good wish.',scene:'served'}
+  ],
+  side: {
+    coffee: [
+      {id:'c01',who:'you',fr:'Quelle est la différence entre un cortado et un café noisette ?',ipa:'/kɛl ɛ la di.fe.ʁɑ̃s ɑ̃tʁ œ̃ kɔʁ.ta.do e œ̃ ka.fe nwa.zɛt/',en:'What is the difference between a cortado and a café noisette?',tip:'Quelle est la différence entre… et… ? = What is the difference between… and…?',scene:'coffee'},
+      {id:'c02',who:'lily',fr:'Le cortado a souvent un peu plus de lait.',ipa:'/lə kɔʁ.ta.do a su.vɑ̃ œ̃ pø ply də lɛ/',en:'A cortado often has a little more milk.',tip:'Souvent = often. These coffee names and recipes vary by café.',scene:'coffee'},
+      {id:'c03',who:'you',fr:'Et le café crème, c’est quoi ?',ipa:'/e lə ka.fe kʁɛm sɛ kwa/',en:'And what is a café crème?',tip:'C’est quoi ? is an informal way to ask What is it?',scene:'coffee'},
+      {id:'c04',who:'lily',fr:'C’est un café plus grand, avec du lait chaud.',ipa:'/sɛ.t‿œ̃ ka.fe ply ɡʁɑ̃ a.vɛk dy lɛ ʃo/',en:'It’s a larger coffee with hot milk.',tip:'Plus grand = bigger.',scene:'coffee'}
+    ],
+    pastry: [
+      {id:'p01',who:'you',fr:'Vous avez aussi des croissants ?',ipa:'/vu.z‿a.ve o.si de kʁwa.sɑ̃/',en:'Do you also have croissants?',tip:'Vous avez… ? = Do you have… ?',scene:'pastry'},
+      {id:'p02',who:'lily',fr:'Oui ! Des croissants et des pains au chocolat.',ipa:'/wi de kʁwa.sɑ̃ e de pɛ̃.z‿o ʃɔ.kɔ.la/',en:'Yes! Croissants and pains au chocolat.',tip:'Un pain au chocolat is a chocolate-filled pastry.',scene:'pastry'},
+      {id:'p03',who:'you',fr:'Quelle est la différence ?',ipa:'/kɛl ɛ la di.fe.ʁɑ̃s/',en:'What’s the difference?',tip:'Quelle = which/what (feminine singular).',scene:'pastry'},
+      {id:'p04',who:'lily',fr:'Le croissant est nature. Le pain au chocolat contient du chocolat.',ipa:'/lə kʁwa.sɑ̃ ɛ na.tyʁ lə pɛ̃.z‿o ʃɔ.kɔ.la kɔ̃.tjɛ̃ dy ʃɔ.kɔ.la/',en:'The croissant is plain. The pain au chocolat contains chocolate.',tip:'Nature = plain; contient = contains.',scene:'pastry'}
+    ],
+    recipe: [
+      {id:'r01',who:'you',fr:'Vous préparez la tarte ici ?',ipa:'/vu pʁe.pa.ʁe la taʁt i.si/',en:'Do you make the tart here?',tip:'Ici = here.',scene:'tart'},
+      {id:'r02',who:'lily',fr:'Oui, tous les matins, dans notre cuisine.',ipa:'/wi tu le ma.tɛ̃ dɑ̃ nɔtʁ kɥi.zin/',en:'Yes, every morning, in our kitchen.',tip:'Tous les matins = every morning.',scene:'tart'},
+      {id:'r03',who:'you',fr:'C’est une recette de famille ?',ipa:'/sɛ.t‿yn ʁə.sɛt də fa.mij/',en:'Is it a family recipe?',tip:'Une recette = a recipe.',scene:'tart'},
+      {id:'r04',who:'lily',fr:'Non, c’est la recette de notre pâtissière.',ipa:'/nɔ̃ sɛ la ʁə.sɛt də nɔtʁ pɑ.ti.sjɛʁ/',en:'No, it’s our pastry chef’s recipe.',tip:'Une pâtissière = a female pastry chef.',scene:'tart'}
+    ],
+    places: [
+      {id:'l01',who:'you',fr:'Est-ce qu’il y a une librairie près d’ici ?',ipa:'/ɛs kil i a yn li.bʁɛ.ʁi pʁɛ di.si/',en:'Is there a bookshop near here?',tip:'Une librairie = a bookshop, not a library (bibliothèque).',scene:'street'},
+      {id:'l02',who:'lily',fr:'Oui, juste après la place, à gauche.',ipa:'/wi ʒyst a.pʁɛ la plas a ɡoʃ/',en:'Yes, just after the square, on the left.',tip:'À gauche = on the left.',scene:'street'},
+      {id:'l03',who:'you',fr:'Et le marché, il ouvre à quelle heure ?',ipa:'/e lə maʁ.ʃe il uvʁ a kɛ.l‿œʁ/',en:'And the market, what time does it open?',tip:'À quelle heure ? = At what time?',scene:'street'},
+      {id:'l04',who:'lily',fr:'Le dimanche matin, vers neuf heures.',ipa:'/lə di.mɑ̃ʃ ma.tɛ̃ vɛʁ nœ.v‿œʁ/',en:'Sunday mornings, around nine o’clock.',tip:'Vers = around / approximately.',scene:'street'}
+    ]
+  }
+};
+
+</script>
+<script>
+/* Offline pixel-art café player. The branch graph never asks the learner to choose a reply.
+   Speech uses the Web Speech API (speechSynthesis), which is available only when
+   the browser/device has TTS support and a suitable installed French voice. */
+(() => {
+  'use strict';
+  const story = window.CAFE_STORY;
+  const $ = id => document.getElementById(id);
+  const state = { mode:'main', branch:null, index:0, origin:0 };
+  const supportsSpeech = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  const branchById = id => story.branches.find(b=>b.id===id);
+  const line = () => state.mode==='main' ? story.main[state.index] : story.side[state.branch][state.index];
+  const collection = () => state.mode==='main' ? story.main : story.side[state.branch];
+  const allLines = () => [...story.main,...Object.values(story.side).flat()];
+  const speakerName = who => who==='you'?'Vous · traveler':'Camille · barista';
+  let lastSpeechRequest = 0;
+
+  // Native pixel-shaped SVG, no image downloads or network requests.
+  const R = (x,y,w,h,c,extra='')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}" ${extra}/>`;
+  const T = (x,y,text,size=12,color='#fff0d1')=>`<text x="${x}" y="${y}" text-anchor="middle" font-family="ui-monospace,monospace" font-size="${size}" font-weight="800" fill="${color}">${text}</text>`;
+  const grid = (cols,rows,cx,cy,cell,palette,pixels)=>{
+    let out='';
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+      const p=pixels[y]?.[x];
+      if(p&&p!=='.') out+=R(cx+x*cell,cy+y*cell,cell,cell,palette[p]||p);
+    }
+    return out;
+  };
+  const pal = {X:'#1a273c',a:'#c88347',b:'#e5a15d',c:'#fbd48c',d:'#f7e6bf',e:'#a35d42',f:'#6f3d40',g:'#fff6da',h:'#f2df7a',i:'#d9a72d'};
+  const CROISSANT = ['....XXXXX....','...XaaaaaX...','..XabbbbaX..','.XaabcccbaaX','XaabccccbbaX','XabccddccbaX','XabccddccbaX','.Xabbccbb aX'.replaceAll(' ',''),'..XXaabbaXX.','...XXXaXXX...'];
+  const PAIN = ['..XXXXXXXXXX..','.XaaaaaaaaaaX.','XabbbbbbbbbbaX','XabbbccccbbbaX','Xabcccddccbb aX'.replaceAll(' ',''),'XabcccddccbbaX','XabbbccccbbbaX','XabbbeeeebbaX','.XaaaaaaaaaaX.','..XXXXXXXXXX..'];
+  const TART = ['.......X.......','......XhX......','.....XhhhX.....','....XhhhhhX....','...XhhhhhhhX...','..XhhhggghhhX..','.XhhggggggghhX.','XhhggggggggghhX','XbbbbbbbbbbbbbbX','Xaaaccccccaaa aX'.replaceAll(' ',''),'..XXXXXXXXXXX..'];
+  function pastry(type,x,y,s=3){
+    const arr=type==='croissant'?CROISSANT:type==='pain'?PAIN:TART;
+    const w=Math.max(...arr.map(x=>x.length));
+    return `<g class="bob">${grid(w,arr.length,x,y,s,pal,arr)}</g>`;
+  }
+  function cup(x,y,s=1,type='cortado'){
+    const milk=type==='noisette'?'#d6a173':'#ead8ae';
+    return `<g transform="translate(${x} ${y}) scale(${s})">`+
+      R(6,31,54,5,'#cfae8d')+R(12,36,42,4,'#936d66')+
+      R(53,12,13,6,'#f5e5c4')+R(62,16,6,16,'#f5e5c4')+R(53,30,13,5,'#f5e5c4')+
+      R(8,9,50,7,'#f6ead7')+R(12,14,44,20,'#f4e6cd')+R(13,13,42,7,milk)+R(16,13,38,3,'#b1774c')+
+      R(11,17,5,16,'#fff8e5')+R(19,20,4,11,'#ffffff88')+
+      `<g class="steam">${R(23,-5,4,13,'#ffedce9a')}${R(26,-12,4,7,'#ffedce8a')}</g>`+
+      `<g class="steam">${R(41,-7,4,14,'#ffedce91')}${R(44,-13,4,7,'#ffedce8a')}</g></g>`;
+  }
+  function person(x,y,who,scale=2.1){
+    const barista=who==='lily';
+    const skin=barista?'#e2a080':'#ca9374',hair=barista?'#47364d':'#604536',shirt=barista?'#eab67c':'#67a4ad',pants=barista?'#4f4c64':'#3e5678';
+    return `<g transform="translate(${x},${y}) scale(${scale})">`+
+      R(6,39,8,9,'#243446')+R(18,39,8,9,'#243446')+
+      R(5,27,22,15,pants)+R(2,14,28,17,shirt)+R(4,16,24,2,'#fbdea8')+
+      (barista?R(9,19,15,13,'#fff0d6')+R(14,22,4,5,'#be7870'):'')+
+      R(0,15,5,15,skin)+R(27,15,5,15,skin)+
+      R(5,0,22,19,hair)+R(7,5,18,13,skin)+R(5,3,22,6,hair)+
+      (barista?R(3,6,4,17,hair)+R(26,6,4,18,hair):R(10,-1,12,5,hair))+
+      R(10,12,3,2,'#382e3c')+R(21,12,3,2,'#382e3c')+R(15,16,5,1,'#ab625d')+
+      (barista?`<g class="wave">${R(29,12,5,8,skin)}</g>`:'')+
+      R(4,46,11,3,'#283349')+R(18,46,11,3,'#283349')+
+      `</g>`;
+  }
+  function interior(){
+    let s=R(0,0,480,210,'#a96769')+R(0,0,480,14,'#67435c')+R(0,13,480,10,'#d48c72');
+    for(let x=0;x<480;x+=48) for(let y=26;y<200;y+=30) s+=R(x+(y%60?0:16),y,31,2,'#bd7471');
+    s+=R(34,44,144,111,'#3b536a')+R(42,52,128,95,'#9ed0c6')+R(50,60,112,81,'#d4dcab')+R(99,52,7,94,'#457185')+R(43,94,126,7,'#457185');
+    s+=R(53,105,39,34,'#91b29a')+R(110,113,48,24,'#79a194')+R(50,137,110,8,'#77947e');
+    s+=R(281,37,153,92,'#69495b')+R(288,44,139,78,'#2f3e55')+T(358,65,'CAFÉ',16,'#f7d89e')+T(358,85,'CORTADO',10,'#f4e4ce')+T(358,101,'TARTE • 5€',10,'#f4e4ce');
+    s+=R(0,200,480,100,'#b88379');
+    for(let y=205;y<300;y+=31)for(let x=(y%62?0:18);x<480;x+=54)s+=R(x,y,51,3,'#d5a88c');
+    s+=R(0,211,480,14,'#edbf92')+R(0,225,480,49,'#774e52')+R(0,263,480,14,'#4c4351');
+    for(let x=20;x<480;x+=35)s+=R(x,238,8,6,'#956164');
+    // Espresso machine and glass pastry dome.
+    s+=R(293,159,77,43,'#3c586b')+R(302,152,61,7,'#b9c4b8')+R(312,169,39,21,'#65899a')+R(324,183,16,5,'#1d3343')+R(289,199,85,7,'#20394c');
+    s+=R(182,190,90,10,'#a2d7cf')+R(187,169,80,23,'#a4dadb88')+R(191,173,72,4,'#eff9e8aa')+R(184,196,86,8,'#e3b985');
+    return s;
+  }
+  function outside(){
+    let s=R(0,0,480,300,'#9bc6c1')+R(0,204,480,96,'#a9a4a1');
+    s+=R(0,32,477,184,'#d9a47f')+R(0,37,477,12,'#76566b')+R(26,61,428,30,'#704f64')+T(240,83,'CAFÉ DES TILLEULS',18,'#f5dfab');
+    for(let x of [22,356]){
+      s+=R(x,109,105,106,'#73526a')+R(x+8,117,89,88,'#a7c7b4')+R(x+19,124,17,71,'#cde0bd')+R(x+44,117,7,94,'#77586a');
+    }
+    s+=R(160,102,151,123,'#634d67')+R(169,112,131,111,'#d3c2aa')+R(169,158,131,65,'#a2ccc6')+R(220,112,7,110,'#6c5667')+R(173,164,122,7,'#775a6b')+R(288,174,6,8,'#f8e1ae');
+    s+=R(142,99,190,20,'#ebad80')+R(144,111,185,12,'#faf0cf');
+    for(let x=146;x<325;x+=23)s+=R(x,111,13,12,'#c56b72');
+    s+=R(0,219,480,14,'#d7b9a4')+R(0,233,480,8,'#756878');
+    for(let x=22;x<480;x+=80)s+=R(x,257,50,5,'#d6c6b7');
+    s+=R(408,178,10,50,'#6c5865')+R(390,161,48,26,'#466c63')+R(399,149,32,22,'#588c72')+R(408,134,18,21,'#6fa17d');
+    return s;
+  }
+  function street(){
+    let s=R(0,0,480,300,'#a6cbd0')+R(0,188,480,112,'#b8a69b');
+    s+=R(0,48,142,149,'#cd9a80')+R(10,22,126,34,'#71576d')+R(29,84,61,83,'#5f6c7e')+R(41,96,37,66,'#f1cd95')+R(111,89,22,105,'#785b70');
+    s+=R(315,34,158,163,'#efc5a0')+R(333,15,128,25,'#9e6971')+R(351,75,80,80,'#6b737d')+R(362,88,58,61,'#b6d5bb')+R(376,80,7,73,'#7b7380');
+    s+=R(155,97,18,113,'#6b645d')+R(149,72,40,40,'#658d72')+R(141,56,55,48,'#4d806e')+R(157,44,30,29,'#78a27b');
+    s+=R(200,175,74,25,'#80a77e')+R(211,160,52,19,'#5b936e')+R(215,150,42,15,'#72aa75');
+    s+=R(0,196,480,11,'#e6d2ae')+R(0,241,480,14,'#887b76');
+    for(let x=30;x<460;x+=58)s+=R(x,273,34,5,'#d7c2ad');
+    s+=R(276,172,12,54,'#6f655d')+R(266,160,31,19,'#4a655c')+T(281,173,'→',13,'#f8edc2');
+    return s;
+  }
+  function sceneArt(scene,who){
+    let s='';
+    if(scene==='outside'){
+      s=outside()+`<g class="arriving">${person(32,180,'you',1.8)}</g>`;
+    }else if(scene==='street'){
+      s=street()+person(83,179,'you',1.75)+person(374,175,'lily',1.7);
+    }else{
+      s=interior()+person(63,132,'you',1.7)+person(379,124,'lily',1.55);
+      if(scene==='coffee'){
+        s+=R(112,175,161,35,'#b87e71')+R(112,173,161,6,'#f0bb85')+cup(159,146,.78);
+      }else if(scene==='pastry'){
+        s+=R(120,181,190,9,'#f5c994')+pastry('croissant',130,139,3.3)+pastry('pain',218,138,3.3)+R(117,202,181,6,'#fae5ba88');
+      }else if(scene==='tart'){
+        s+=R(120,183,171,9,'#efbe8b')+pastry('tart',160,132,4.0)+R(149,201,135,5,'#fff0c0aa');
+      }else if(scene==='served'){
+        s+=cup(181,157,.86)+pastry('tart',281,179,1.65);
+      }
+    }
+    return `<svg viewBox="0 0 480 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
+  }
+  const labelsFor = scene => ({
+    coffee:[['un cortado','cortado']],
+    pastry:[['un croissant','croissant'],['un pain au chocolat','chocolate pastry']],
+    tart:[['une tarte au citron','lemon tart']],
+    street:[['un jardin','garden'],['un marché','market']],
+    served:[['un cortado','cortado'],['une tarte au citron','lemon tart']]
+  })[scene]||[];
+  function renderArt(scene,who){
+    const labels=labelsFor(scene);
+    $('art').innerHTML=sceneArt(scene,who)+(labels.length?`<div class="scene-labels">${labels.map(([fr,en])=>`<div class="scene-label"><span lang="fr">${fr}</span>${$('english-toggle').checked?`<small lang="en">${en}</small>`:''}</div>`).join('')}</div>`:'');
+    const names={outside:'Outside the café',counter:'Inside the café with the barista',coffee:'Illustrated cortado on the counter',pastry:'Illustrated croissant and pain au chocolat',tart:'Illustrated slice of lemon tart',street:'French neighborhood street with a garden',served:'Cortado and tart served'};
+    $('art').setAttribute('aria-label',names[scene]);
+  }
+  function speechStop(){
+    lastSpeechRequest++;
+    if(supportsSpeech)window.speechSynthesis.cancel();
+    $('listen').disabled=!supportsSpeech;
+    $('stop').disabled=true;
+  }
+  function speak(){
+    if(!supportsSpeech){$('audio-note').textContent='Speech synthesis is unavailable in this browser.';return;}
+    speechStop();
+    const token=lastSpeechRequest;
+    const utterance=new SpeechSynthesisUtterance(line().fr);
+    utterance.lang='fr-FR';
+    utterance.rate=Number($('speed').value);
+    utterance.pitch=1;
+    const voices=window.speechSynthesis.getVoices();
+    const voice=voices.find(v=>/^fr[-_]FR/i.test(v.lang))||voices.find(v=>/^fr/i.test(v.lang));
+    if(voice)utterance.voice=voice;
+    utterance.onstart=()=>{if(token!==lastSpeechRequest)return;$('stop').disabled=false;$('listen').disabled=true;$('audio-note').textContent='Reading in French…';};
+    utterance.onend=()=>{if(token!==lastSpeechRequest)return;$('stop').disabled=true;$('listen').disabled=false;$('audio-note').textContent='';};
+    utterance.onerror=e=>{if(token!==lastSpeechRequest)return;$('stop').disabled=true;$('listen').disabled=false;$('audio-note').textContent=e.error==='canceled'?'':'French speech could not start on this device.';};
+    try{window.speechSynthesis.speak(utterance);$('audio-note').textContent='Preparing French voice…';}
+    catch(e){$('audio-note').textContent='French speech is unavailable.';}
+  }
+  function renderChapters(){
+    $('chapter-list').innerHTML='';
+    const mainIdx=state.mode==='main'?state.index:state.origin;
+    story.chapters.forEach((chapter,i)=>{
+      const start=story.main.findIndex(s=>s.id===chapter.id);
+      const end=i+1<story.chapters.length?story.main.findIndex(s=>s.id===story.chapters[i+1].id):story.main.length;
+      const active=mainIdx>=start&&mainIdx<end;
+      const b=document.createElement('button');b.type='button';b.className='map-item'+(active?' active':'');
+      b.innerHTML=`<span class="dot" aria-hidden="true"></span><span>${chapter.name}</span>`;
+      b.setAttribute('aria-current',active&&state.mode==='main'?'step':'false');
+      b.addEventListener('click',()=>jumpMain(start));$('chapter-list').append(b);
+    });
+    $('branch-list').innerHTML='';
+    story.branches.forEach(branch=>{
+      const b=document.createElement('button');b.type='button';b.className='map-item branch-item'+(state.mode==='branch'&&state.branch===branch.id?' active':'');
+      b.innerHTML=`<span class="branch-sym" aria-hidden="true">↳</span><span><span class="branch-name">${branch.title}</span><span class="branch-subtitle">${branch.subtitle}</span></span>`;
+      b.addEventListener('click',()=>jumpBranch(branch.id));$('branch-list').append(b);
+    });
+  }
+  function render(){
+    const l=line(),seq=collection();
+    const isSide=state.mode==='branch';
+    const chapter=story.chapters.slice().reverse().find(x=>story.main.findIndex(y=>y.id===x.id)<=(isSide?state.origin:state.index));
+    const b=isSide?branchById(state.branch):null;
+    $('location').textContent=isSide?'SIDE SCENE · '+b.title.toUpperCase():'MAIN STORY · '+(chapter?.name||'Arriving').toUpperCase();
+    $('progress').textContent=`${String(state.index+1).padStart(2,'0')} / ${String(seq.length).padStart(2,'0')}`;
+    $('avatar').textContent=l.who==='you'?'V':'C';$('avatar').classList.toggle('barista',l.who==='lily');
+    $('speaker').textContent=speakerName(l.who);
+    $('chapter-label').textContent=isSide?'Optional detour':(chapter?.name||'Arriving');
+    $('french').textContent=l.fr;$('reading').textContent=l.ipa;$('translation').textContent=l.en;$('tip').textContent=l.tip;
+    $('reading').hidden=!$('ipa-toggle').checked;$('translation').hidden=!$('english-toggle').checked;
+    $('prev').disabled=state.mode==='main'&&state.index===0;
+    $('next').disabled=state.mode==='main'&&state.index===story.main.length-1;
+    $('next').textContent=isSide&&state.index===seq.length-1?'Return to story ↩':'Next →';
+    $('return').hidden=!isSide;
+    $('branch-prompt').hidden=true;$('branch-prompt').innerHTML='';
+    const available=state.mode==='main'?story.branches.filter(x=>x.after===l.id):[];
+    if(available.length){
+      $('branch-prompt').hidden=false;
+      const lbl=document.createElement('div');lbl.className='prompt-title';lbl.textContent='Optional scripted detour (not a response choice)';$('branch-prompt').append(lbl);
+      available.forEach(br=>{const btn=document.createElement('button');btn.type='button';btn.className='branch-button';btn.textContent='Explore: '+br.title+' ↗';btn.addEventListener('click',()=>jumpBranch(br.id));$('branch-prompt').append(btn);});
+    }
+    renderArt(l.scene,l.who);renderChapters();
+  }
+  function update(auto=false){speechStop();render();if(auto&&$('auto-toggle').checked)speak();}
+  function jumpMain(i){state.mode='main';state.branch=null;state.index=i;state.origin=i;update(true);closeMapOnSmall();}
+  function jumpBranch(id){
+    if(!story.side[id])return;
+    if(state.mode==='main')state.origin=state.index;
+    state.mode='branch';state.branch=id;state.index=0;update(true);closeMapOnSmall();
+  }
+  function returnMain(){state.mode='main';state.branch=null;state.index=state.origin;update(false);}
+  function next(){
+    if(state.mode==='branch'&&state.index===collection().length-1){returnMain();return;}
+    if(state.index<collection().length-1){state.index++;update(true);}
+  }
+  function prev(){
+    if(state.index===0&&state.mode==='branch'){returnMain();return;}
+    if(state.index>0){state.index--;update(true);}
+  }
+  function closeMapOnSmall(){if(innerWidth<=920){$('map').classList.remove('open');$('show-map').setAttribute('aria-expanded','false');}}
+  function transcript(){
+    const root=$('transcript-list');root.innerHTML='';
+    const addGroup=(title,seq,bid)=>{
+      const h=document.createElement('h3');h.className='transcript-group';h.textContent=title;root.append(h);
+      seq.forEach((l,i)=>{
+        const b=document.createElement('button');b.type='button';b.className='transcript-row';
+        const sp=document.createElement('span');sp.className='t-speaker';sp.textContent=speakerName(l.who);
+        const fr=document.createElement('span');fr.className='t-fr';fr.lang='fr';fr.textContent=l.fr;
+        const en=document.createElement('span');en.className='t-en';en.textContent=l.en;
+        b.append(sp,fr,en);
+        b.addEventListener('click',()=>{
+          $('transcript').close();if(bid){jumpBranch(bid);state.index=i;update(false);}else jumpMain(i);
+        });root.append(b);
+      });
+    };
+    addGroup('Main conversation',story.main,null);
+    story.branches.forEach(b=>addGroup('↳ '+b.title,story.side[b.id],b.id));
+    $('transcript').showModal();$('transcript-btn').setAttribute('aria-expanded','true');
+  }
+  $('prev').addEventListener('click',prev);$('next').addEventListener('click',next);$('return').addEventListener('click',returnMain);
+  $('listen').addEventListener('click',speak);$('stop').addEventListener('click',()=>{speechStop();$('audio-note').textContent='';});
+  $('english-toggle').addEventListener('change',render);$('ipa-toggle').addEventListener('change',render);
+  $('show-map').addEventListener('click',()=>{const open=$('map').classList.toggle('open');$('show-map').setAttribute('aria-expanded',String(open));});
+  $('transcript-btn').addEventListener('click',transcript);$('close-transcript').addEventListener('click',()=>$('transcript').close());
+  $('transcript').addEventListener('close',()=>$('transcript-btn').setAttribute('aria-expanded','false'));
+  const motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
+  $('motion-toggle').checked=motionPreference.matches;
+  document.body.classList.toggle('reduce-motion',motionPreference.matches);
+  $('motion-toggle').addEventListener('change',e=>document.body.classList.toggle('reduce-motion',e.target.checked));
+  motionPreference.addEventListener('change',e=>{$('motion-toggle').checked=e.matches;document.body.classList.toggle('reduce-motion',e.matches);});
+  $('speed').addEventListener('input',()=>$('speed-output').textContent=Number($('speed').value).toFixed(2)+'×');
+  document.addEventListener('keydown',e=>{
+    if(e.altKey||e.ctrlKey||e.metaKey||e.repeat||$('transcript').open)return;
+    if(e.target.closest('input,textarea,select,button,[contenteditable]'))return;
+    if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();next();}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev();}
+  });
+  window.addEventListener('pagehide',speechStop);
+  $('listen').disabled=!supportsSpeech;
+  if(!supportsSpeech)$('audio-note').textContent='This browser does not support speech synthesis.';
+  render();
+  // Exposed for smoke tests and author's own scene tooling, not needed for playback.
+  window.cafePlayer={next,prev,jumpMain,jumpBranch,returnMain,getState:()=>({...state}),line,allLines};
+})();
+
+</script>
+</body>
+</html>
