@@ -1,0 +1,334 @@
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" data-has-toc data-has-sidebar class="astro-g5ptsecz"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Searchable source reference tags | C99 key matching</title><link rel="canonical" href="https://toys.awwtools.com/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/reference-tags/"/><link rel="sitemap" href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/sitemap-index.xml"/><link rel="shortcut icon" href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/favicon.svg" type="image/svg+xml"/><meta name="generator" content="Astro v7.4.7"/><meta name="generator" content="Starlight v0.42.10"/><meta property="og:title" content="Searchable source reference tags"/><meta property="og:type" content="article"/><meta property="og:url" content="https://toys.awwtools.com/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/reference-tags/"/><meta property="og:locale" content="en"/><meta property="og:description" content="Parser behavior, matching algorithms, commented source and measured results."/><meta property="og:site_name" content="C99 key matching"/><meta name="twitter:card" content="summary_large_image"/><meta name="description" content="Parser behavior, matching algorithms, commented source and measured results."/><link rel="preload" href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/_astro/atkinson-hyperlegible-latin-400-normal.BrHNak5F.woff2" as="font" type="font/woff2" crossorigin="anonymous"><meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111821" media="(prefers-color-scheme: dark)"><script>
+  try {
+    const preferences = JSON.parse(localStorage.getItem('c99-reader') || '{}');
+    const root = document.documentElement;
+    if (['standard', 'large', 'larger'].includes(preferences.size)) root.dataset.readingSize = preferences.size;
+    // Old focus/wrap settings are retired. Source always wraps; only navigation collapses.
+    if (preferences.collapsed) root.dataset.navigationCollapsed = 'true';
+    if (Number.isFinite(preferences.width) && preferences.width >= 200 && preferences.width <= 420) {
+      root.dataset.navigationWidth = String(preferences.width);
+      root.style.setProperty('--reader-sidebar-width', preferences.width + 'px');
+    }
+  } catch { /* Defaults work when browser settings disable storage. */ }
+</script><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg aria-hidden="true" class="dark astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg aria-hidden="true" class="auto astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></template><link rel="stylesheet" href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/_astro/print.C9eyqPGL.css" media="print"><link rel="stylesheet" href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/_astro/common.Cvwr8hBB.css"><script type="module" src="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/_astro/page.cNngjUgL.js"></script></head><body class="astro-g5ptsecz"><a class="sl-skip-link astro-qb7clj6f" href="#_top">Skip to content</a><div class="page sl-flex astro-yntsjkba"><header class="header astro-yntsjkba"><div class="reader-header"><div class="reader-title"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/" class="site-title sl-flex astro-6rvad3va"><span class="astro-6rvad3va" translate="no">C99 key matching</span></a></div><div class="reader-search"><site-search class=" astro-b5kgnn7o" data-translations="{&quot;placeholder&quot;:&quot;Search&quot;}"><button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" class="astro-b5kgnn7o"><svg aria-hidden="true" class="astro-b5kgnn7o astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.71 20.29 18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg><span class="sl-hidden md:sl-block astro-b5kgnn7o" aria-hidden="true">Search</span><kbd class="sl-hidden md:sl-flex astro-b5kgnn7o" style="display: none"><kbd class="astro-b5kgnn7o">Ctrl</kbd><kbd class="astro-b5kgnn7o">K</kbd></kbd></button><dialog style="padding: 0" aria-label="Search" class="astro-b5kgnn7o"><div class="dialog-frame sl-flex astro-b5kgnn7o"><button data-close-modal class="sl-flex md:sl-hidden astro-b5kgnn7o">Cancel</button><div class="search-container astro-b5kgnn7o"><div id="starlight__search" class="astro-b5kgnn7o"></div></div></div></dialog></site-search><script>
+	(() => {
+		const openBtn = document.querySelector('button[data-open-modal]');
+		const shortcut = openBtn?.querySelector('kbd');
+		if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+		const platformKey = shortcut.querySelector('kbd');
+		if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+			platformKey.textContent = '⌘';
+			openBtn.setAttribute('aria-keyshortcuts', 'Meta+K');
+		}
+		shortcut.style.display = '';
+	})();
+</script><script type="module" src="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/_astro/Search.astro_astro_type_script_index_0_lang.CibB10mu.js"></script></div><label class="text-size-control" for="reader-size"><span>Text size</span><select id="reader-size" name="reader-size"><option value="standard">18 px</option><option value="large">20 px</option><option value="larger">22 px</option></select></label><div class="reader-theme"><starlight-theme-select><label style="--sl-select-width: 6.25em" class="astro-2z5xp7gb"><span class="sr-only astro-2z5xp7gb">Select theme</span><svg aria-hidden="true" class="icon label-icon astro-2z5xp7gb astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg><select autocomplete="off" class="astro-2z5xp7gb"><option value="dark" class="astro-2z5xp7gb">Dark</option><option value="light" class="astro-2z5xp7gb">Light</option><option value="auto" selected class="astro-2z5xp7gb">Auto</option></select><svg aria-hidden="true" class="icon caret astro-2z5xp7gb astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg></label></starlight-theme-select><script>
+	StarlightThemeProvider.updatePickers();
+</script><script type="module">var e=`starlight-theme`,t=e=>e===`auto`||e===`dark`||e===`light`?e:`auto`,n=()=>t(typeof localStorage<`u`&&localStorage.getItem(e));function r(t){typeof localStorage<`u`&&localStorage.setItem(e,t===`light`||t===`dark`?t:``)}var i=()=>matchMedia(`(prefers-color-scheme: light)`).matches?`light`:`dark`;function a(e){StarlightThemeProvider.updatePickers(e),document.documentElement.dataset.theme=e===`auto`?i():e,r(e)}matchMedia(`(prefers-color-scheme: light)`).addEventListener(`change`,()=>{n()===`auto`&&a(`auto`)});var o=class extends HTMLElement{constructor(){super(),a(n()),this.querySelector(`select`)?.addEventListener(`change`,e=>{e.currentTarget instanceof HTMLSelectElement&&a(t(e.currentTarget.value))})}};customElements.define(`starlight-theme-select`,o);</script></div></div><script type="module">function e(){let e=document.documentElement,t=document.getElementById(`reader-size`),n=document.getElementById(`navigation-toggle`),r=document.getElementById(`navigation-resize`);if(!t||!n||!r||t.dataset.bound)return;t.dataset.bound=`true`,t.value=e.dataset.readingSize||`standard`;function i(){try{localStorage.setItem(`c99-reader`,JSON.stringify({size:e.dataset.readingSize||`standard`,collapsed:e.dataset.navigationCollapsed===`true`,width:Number(e.dataset.navigationWidth||272)}))}catch{}}function a(){let t=e.dataset.navigationCollapsed===`true`;n.textContent=t?`Show`:`Hide`,n.setAttribute(`aria-label`,t?`Show navigation`:`Hide navigation`),n.setAttribute(`aria-expanded`,String(!t))}function o(){return Math.max(200,Math.min(420,Math.floor(window.innerWidth*.42)))}function s(t){let n=Math.max(200,Math.min(o(),t));e.dataset.navigationWidth=String(n),e.style.setProperty(`--reader-sidebar-width`,`${n}px`),r.setAttribute(`aria-valuenow`,String(n)),r.setAttribute(`aria-valuemax`,String(o()))}t.addEventListener(`change`,()=>{e.dataset.readingSize=t.value,i()}),n.addEventListener(`click`,()=>{e.dataset.navigationCollapsed=String(e.dataset.navigationCollapsed!==`true`),a(),i()}),r.addEventListener(`pointerdown`,t=>{t.button===0&&(r.setPointerCapture(t.pointerId),e.dataset.resizingNavigation=`true`,t.preventDefault())}),r.addEventListener(`pointermove`,e=>{r.hasPointerCapture(e.pointerId)&&s(e.clientX)});function c(t){r.hasPointerCapture(t.pointerId)&&r.releasePointerCapture(t.pointerId),delete e.dataset.resizingNavigation,i()}r.addEventListener(`pointerup`,c),r.addEventListener(`pointercancel`,c),r.addEventListener(`keydown`,t=>{let n=t.shiftKey?40:16,r=Number(e.dataset.navigationWidth||272);if(t.key===`ArrowLeft`)s(r-n);else if(t.key===`ArrowRight`)s(r+n);else if(t.key===`Home`)s(272);else return;t.preventDefault(),i()});function l(){window.matchMedia(`(min-width: 50rem)`).matches&&s(Number(e.dataset.navigationWidth||272))}window.addEventListener(`resize`,l),l(),a()}e(),document.addEventListener(`astro:page-load`,e);</script></header><nav class="sidebar print:hidden astro-yntsjkba" aria-label="Main"><button popovertarget="starlight__sidebar" class="sl-menu-button sl-flex md:sl-hidden print:hidden astro-r2osgdlg"><svg aria-hidden="true" class="open-menu astro-r2osgdlg astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg><svg aria-hidden="true" class="close-menu astro-r2osgdlg astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="m13.41 12 6.3-6.29a1.004 1.004 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1.004 1.004 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 0 1.42.998.998 0 0 0 1.42 0l6.29-6.3 6.29 6.3a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.42L13.41 12Z"/></svg><span class="sr-only astro-r2osgdlg">Menu</span></button><script type="module">var e=class extends HTMLElement{constructor(){super();let e=matchMedia(`(min-width: 50em)`),t=()=>{this.popover=e.matches?null:`auto`};t(),e.addEventListener(`change`,()=>t()),this.addEventListener(`toggle`,({newState:e})=>this.trapFocus(e===`open`))}trapFocus(e){document.querySelectorAll(`.main-frame, .sl-skip-link`).forEach(t=>{t.toggleAttribute(`inert`,e)})}};customElements.define(`sl-sidebar-pane`,e);</script><script type="module">var e=class extends HTMLElement{constructor(){super();let e=this.querySelector(`select`);e&&(e.addEventListener(`change`,e=>{e.currentTarget instanceof HTMLSelectElement&&(window.location.pathname=e.currentTarget.value)}),window.addEventListener(`pageshow`,t=>{if(!t.persisted)return;let n=e.querySelector(`option[selected]`)?.index;n!==e.selectedIndex&&(e.selectedIndex=n??0)}))}};customElements.define(`starlight-lang-select`,e);</script><sl-sidebar-pane popover id="starlight__sidebar" class="sidebar-pane astro-yntsjkba"><div class="sidebar-content sl-flex astro-yntsjkba"><div class="navigation-tools" data-pagefind-ignore><span class="navigation-label">Navigation</span><button id="navigation-toggle" type="button" aria-expanded="true" aria-controls="reader-navigation">Hide</button></div><div id="reader-navigation"><sl-sidebar-state-persist data-hash="15lv381" class="astro-ipdry5cl"><script aria-hidden="true">
+		(() => {
+			try {
+				if (!matchMedia('(min-width: 50em)').matches) return;
+				/** @type {HTMLElement | null} */
+				const target = document.querySelector('sl-sidebar-state-persist');
+				const state = JSON.parse(sessionStorage.getItem('sl-sidebar-state') || '0');
+				if (!target || !state || target.dataset.hash !== state.hash) return;
+				window._starlightScrollRestore = state.scroll;
+				customElements.define(
+					'sl-sidebar-restore',
+					class SidebarRestore extends HTMLElement {
+						connectedCallback() {
+							try {
+								const idx = parseInt(this.dataset.index || '');
+								const details = this.closest('details');
+								if (details && typeof state.open[idx] === 'boolean') details.open = state.open[idx];
+							} catch {}
+						}
+					}
+				);
+			} catch {}
+		})();
+	</script><ul class="top-level astro-rmhv4bp6"><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/" class="large astro-rmhv4bp6"><span class="astro-rmhv4bp6">Project overview</span></a></li><li class="astro-rmhv4bp6"><details open class="astro-rmhv4bp6"><summary class="astro-rmhv4bp6"><span class="group-label astro-rmhv4bp6"><span class="large astro-rmhv4bp6">Configuration processing</span></span><svg aria-hidden="true" class="caret astro-rmhv4bp6 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="0"></sl-sidebar-restore><ul class="astro-rmhv4bp6"><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/configuration-sequence/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Parsing and resolution sequence</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/acceptance-policy/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Acceptance and rejection rules</span></a></li></ul></details></li><li class="astro-rmhv4bp6"><details open class="astro-rmhv4bp6"><summary class="astro-rmhv4bp6"><span class="group-label astro-rmhv4bp6"><span class="large astro-rmhv4bp6">Matching algorithms</span></span><svg aria-hidden="true" class="caret astro-rmhv4bp6 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="1"></sl-sidebar-restore><ul class="astro-rmhv4bp6"><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/matching-algorithms/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Algorithm comparison</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/reference/measured-results/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Measured recovery and risks</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/edit-distances/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Edit distance calculations</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/reference/algorithm-formulas/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Scoring formulas and limits</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/reference/learning-resources/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Algorithm explanations and references</span></a></li></ul></details></li><li class="astro-rmhv4bp6"><details open class="astro-rmhv4bp6"><summary class="astro-rmhv4bp6"><span class="group-label astro-rmhv4bp6"><span class="large astro-rmhv4bp6">Source reference</span></span><svg aria-hidden="true" class="caret astro-rmhv4bp6 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="2"></sl-sidebar-restore><ul class="astro-rmhv4bp6"><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/source-files/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">C99 source files</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/reference-tags/" aria-current="page" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Searchable reference tags</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/source-review/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Source readability changes</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/standard-library-review/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Standard-library and banned-call review</span></a></li></ul></details></li><li class="astro-rmhv4bp6"><details open class="astro-rmhv4bp6"><summary class="astro-rmhv4bp6"><span class="group-label astro-rmhv4bp6"><span class="large astro-rmhv4bp6">Tests and reports</span></span><svg aria-hidden="true" class="caret astro-rmhv4bp6 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="3"></sl-sidebar-restore><ul class="astro-rmhv4bp6"><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/verification-results/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Correctness and regression results</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/reference/benchmark-results/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Benchmark results</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/reference/benchmark-methods/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Calibration and timing methods</span></a></li><li class="astro-rmhv4bp6"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/build-commands/" class="astro-rmhv4bp6"><span class="astro-rmhv4bp6">Build and run commands</span></a></li></ul></details></li></ul><script aria-hidden="true">
+		(() => {
+			const scroller = document.getElementById('starlight__sidebar');
+			if (!window._starlightScrollRestore || !scroller) return;
+			scroller.scrollTop = window._starlightScrollRestore;
+			delete window._starlightScrollRestore;
+		})();
+	</script></sl-sidebar-state-persist><div class="md:sl-hidden"><div class="mobile-preferences sl-flex astro-p4azlveh"><div class="social-icons astro-p4azlveh"></div><starlight-theme-select><label style="--sl-select-width: 6.25em" class="astro-2z5xp7gb"><span class="sr-only astro-2z5xp7gb">Select theme</span><svg aria-hidden="true" class="icon label-icon astro-2z5xp7gb astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg><select autocomplete="off" class="astro-2z5xp7gb"><option value="dark" class="astro-2z5xp7gb">Dark</option><option value="light" class="astro-2z5xp7gb">Light</option><option value="auto" selected class="astro-2z5xp7gb">Auto</option></select><svg aria-hidden="true" class="icon caret astro-2z5xp7gb astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg></label></starlight-theme-select><script>
+	StarlightThemeProvider.updatePickers();
+</script></div></div></div><div id="navigation-resize" class="navigation-resize" role="separator" tabindex="0" aria-label="Navigation width" aria-orientation="vertical" aria-valuemin="200" aria-valuemax="420" aria-valuenow="272" aria-controls="starlight__sidebar" title="Drag to resize. Arrow keys change width; Home resets it."></div></div></sl-sidebar-pane></nav><div class="main-frame astro-yntsjkba"><script type="module">var e=document.getElementById(`starlight__sidebar`),t=e?.querySelector(`sl-sidebar-state-persist`),n=`sl-sidebar-state`,r=()=>{let r=[],i=t?.dataset.hash||``;try{let e=sessionStorage.getItem(n),t=JSON.parse(e||`{}`);Array.isArray(t.open)&&t.hash===i&&(r=t.open)}catch{}return{hash:i,open:r,scroll:e?.scrollTop||0}},i=e=>{try{sessionStorage.setItem(n,JSON.stringify(e))}catch{}},a=()=>i(r()),o=(e,t)=>{let n=r();n.open[t]=e,i(n)};t?.addEventListener(`click`,e=>{if(!(e.target instanceof Element))return;let t=e.target.closest(`summary`)?.closest(`details`);if(!t)return;let n=t.querySelector(`sl-sidebar-restore`),r=parseInt(n?.dataset.index||``);isNaN(r)||o(!t.open,r)}),addEventListener(`visibilitychange`,()=>{document.visibilityState===`hidden`&&a()});</script><div class="lg:sl-flex astro-lrzkfocr"><aside class="right-sidebar-container print:hidden astro-lrzkfocr"><div class="right-sidebar astro-lrzkfocr"><div class="lg:sl-hidden astro-qok35upx"><mobile-starlight-toc data-min-h="2" data-max-h="3" class="astro-66cqc7ze"><nav aria-labelledby="starlight__on-this-page--mobile" class="astro-66cqc7ze"><details id="starlight__mobile-toc" class="astro-66cqc7ze"><summary id="starlight__on-this-page--mobile" class="sl-flex astro-66cqc7ze"><span class="toggle sl-flex astro-66cqc7ze">On this page<svg aria-hidden="true" class="caret astro-66cqc7ze astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></span><span class="display-current astro-66cqc7ze"></span></summary><div class="dropdown astro-66cqc7ze"><ul class="isMobile astro-jugkfwgx" style="--depth: 0;"><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#_top" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Overview</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#tag-definitions-and-source-locations" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Tag definitions and source locations</span></a></li></ul></div></details></nav></mobile-starlight-toc><script type="module" src="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.C3fM4Kra.js"></script></div><div class="right-sidebar-panel sl-hidden lg:sl-block astro-qok35upx"><div class="sl-container astro-qok35upx"><starlight-toc data-min-h="2" data-max-h="3"><nav aria-labelledby="starlight__on-this-page"><h2 id="starlight__on-this-page">On this page</h2><ul class="astro-jugkfwgx" style="--depth: 0;"><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#_top" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Overview</span></a></li><li style="--depth: 0;" class="astro-jugkfwgx"><a href="#tag-definitions-and-source-locations" style="--depth: 0;" class="astro-jugkfwgx"><span style="--depth: 0;" class="astro-jugkfwgx">Tag definitions and source locations</span></a></li></ul></nav></starlight-toc><script type="module" src="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/_astro/TableOfContents.astro_astro_type_script_index_0_lang.BpJaGz7G.js"></script></div></div></div></aside><div class="main-pane astro-lrzkfocr"><main data-pagefind-body class="astro-g5ptsecz" lang="en" dir="ltr"><div class="content-panel astro-a7po4psb"><div class="sl-container astro-a7po4psb"><h1 id="_top" class="astro-bebwqqxs">Searchable source reference tags</h1></div></div><div class="content-panel astro-a7po4psb"><div class="sl-container astro-a7po4psb"><div class="sl-markdown-content"><p>Tags identify explanations across files. They remain useful when line numbers change. Search a tag in the site search or your editor.</p>
+<div class="expressive-code"><link rel="stylesheet" href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/_astro/ec.aiyd6.css"><script type="module" src="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/_astro/ec.0vx5m.js"></script><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="sh" class="wrap" style="--ecMaxLine:44ch"><code><div class="ec-line"><div class="code"><span style="--0:#6F42C1;--1:#B392F0">rg</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">'PM-Lv2pR6'</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">src</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">tests</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">docs</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">scripts</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#032F62;--1:#9ECBFF">ad-hoc</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="rg &#x27;PM-Lv2pR6&#x27; src tests docs scripts ad-hoc"><div></div></button></div></figure></div>
+<div class="sl-heading-wrapper level-h2"><h2 id="tag-definitions-and-source-locations">Tag definitions and source locations</h2><a class="sl-anchor-link" href="#tag-definitions-and-source-locations"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore>Section titled “Tag definitions and source locations”</span></a></div>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Explanation</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-pm-h/#L2">PM-Ap8iD6</a></td>
+<td>Shared data contracts. Start here to see what moves between files.</td>
+<td><code dir="auto">src/pm.h</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-benchmark-c/#L2">PM-Be8tR5</a></td>
+<td>Time matching, not printing or file work.</td>
+<td><code dir="auto">src/benchmark.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-configuration-c/#L196">PM-Bi7nA3</a></td>
+<td>Two passes protect the destination: validate everything, then apply.</td>
+<td><code dir="auto">src/configuration.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/makefile/#L1">PM-Bu4dN7</a></td>
+<td>Build the C program separately from optional documentation tools.</td>
+<td><code dir="auto">Makefile</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-evaluation-c/#L49">PM-Ca8qD4</a></td>
+<td>Calibration moves policy knobs, not algorithm scores.</td>
+<td><code dir="auto">src/evaluation.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-configuration-c/#L2">PM-Cf5bY9</a></td>
+<td>Registries describe names/types; matching algorithms receive data only.</td>
+<td><code dir="auto">src/configuration.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-normalization-c/#L87">PM-Co9sR3</a></td>
+<td>Two canonical names becoming the same text invalidates the schema.</td>
+<td><code dir="auto">src/normalization.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-grams-c/#L33">PM-Cs5uE8</a></td>
+<td>Cosine keeps repetitions. A gram repeated 3 times has weight 3.</td>
+<td><code dir="auto">src/algorithms/grams.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-dataset-c/#L2">PM-Da9sE2</a></td>
+<td>Labels are the answer key; the algorithms do not create them.</td>
+<td><code dir="auto">src/dataset.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/scripts-check-docs-py/#L2">PM-Dc9kU1</a></td>
+<td>Validate generated source coverage, anchors, links and offline assets.“””</td>
+<td><code dir="auto">scripts/check_docs.py</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-grams-c/#L65">PM-Di2gP9</a></td>
+<td>Dice = 2*shared / (left unique + right unique).</td>
+<td><code dir="auto">src/algorithms/grams.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-edit-c/#L15">PM-Dl8xA4</a></td>
+<td>Full Damerau-Levenshtein remembers where each letter last matched.</td>
+<td><code dir="auto">src/algorithms/edit.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/doxyfile/#L1">PM-Do5xP2</a></td>
+<td>Optional API/source browser. The guided site uses make docs.</td>
+<td><code dir="auto">Doxyfile</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-edit-c/#L2">PM-Ed7kQ2</a></td>
+<td>Edit distance: the cheapest way to turn one spelling into another.</td>
+<td><code dir="auto">src/algorithms/edit.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-evaluation-c/#L122">PM-Ev6jH2</a></td>
+<td>Use frozen policy once per held-out case; preserve every result.</td>
+<td><code dir="auto">src/evaluation.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-dataset-c/#L155">PM-Ge6qH1</a></td>
+<td>Build development data first, then the held-out groups.</td>
+<td><code dir="auto">src/dataset.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-hybrid-c/#L1">PM-Hy9dL2</a></td>
+<td>Compare spelling AND ordered words, then mix their scores.</td>
+<td><code dir="auto">src/algorithms/hybrid.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-jaro-c/#L1">PM-Ja6rC3</a></td>
+<td>Jaro counts nearby equal letters, then checks their order.</td>
+<td><code dir="auto">src/algorithms/jaro.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-grams-c/#L64">PM-Jc8aK4</a></td>
+<td>Jaccard = shared / union. Example [abc,bcd] / [abc,bce] = 1/3.</td>
+<td><code dir="auto">src/algorithms/grams.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-dataset-c/#L49">PM-La4bV7</a></td>
+<td>Admit a labeled case only after checking its identity and intent.</td>
+<td><code dir="auto">src/dataset.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-lcs-c/#L1">PM-Lc7sB5</a></td>
+<td>Longest common subsequence keeps equal letters in order; gaps are allowed.</td>
+<td><code dir="auto">src/algorithms/lcs.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-dataset-c/#L340">PM-Lo2dJ5</a></td>
+<td>Read a strict CSV subset into bounded fields.</td>
+<td><code dir="auto">src/dataset.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-edit-c/#L81">PM-Lv2pR6</a></td>
+<td>Levenshtein fills a row left to right. Each cell picks the cheapest:</td>
+<td><code dir="auto">src/algorithms/edit.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-main-c/#L2">PM-Ma4iF8</a></td>
+<td>Run order protects the experiment:</td>
+<td><code dir="auto">src/main.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-evaluation-c/#L2">PM-Me3cU7</a></td>
+<td>Count what happened, including safe rejection and unsafe acceptance.</td>
+<td><code dir="auto">src/evaluation.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-dataset-c/#L98">PM-Mu8zN3</a></td>
+<td>kind 0=delete, 1=insert, 2=replace, 3=swap, 4=two replacements.</td>
+<td><code dir="auto">src/dataset.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-grams-c/#L1">PM-Ng3fW6</a></td>
+<td>Slide a small window over the name, then compare windows.</td>
+<td><code dir="auto">src/algorithms/grams.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-normalization-c/#L2">PM-No4mT8</a></td>
+<td>One spelling for formatting variants; keep tokens separately.</td>
+<td><code dir="auto">src/normalization.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/tests-test-suite-c/#L174">PM-Or4cF6</a></td>
+<td>Independent oracle: breadth-first search counts edits as graph edges.</td>
+<td><code dir="auto">tests/test_suite.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-edit-c/#L123">PM-Os3bF9</a></td>
+<td>The restricted method handles crossed letters with one swap.</td>
+<td><code dir="auto">src/algorithms/edit.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-parser-c/#L2">PM-Pa7kQ2</a></td>
+<td>Turn one line into two strings. Matching happens later.</td>
+<td><code dir="auto">src/parser.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-report-c/#L77">PM-Ra3nB8</a></td>
+<td>Compare safety, then recovery, then speed. Weighted mode checks cost first.</td>
+<td><code dir="auto">src/report.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-resolver-c/#L2">PM-Re6vN1</a></td>
+<td>A similarity score is a suggestion, not permission to bind.</td>
+<td><code dir="auto">src/resolver.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/scripts-verify-regression-py/#L2">PM-Rg4eN8</a></td>
+<td>Compare readability edits with preserved pre-review evidence.</td>
+<td><code dir="auto">scripts/verify_regression.py</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-ratcliff-c/#L1">PM-Ro1hM7</a></td>
+<td>Find a shared block, then repeat on the two remaining sides.</td>
+<td><code dir="auto">src/algorithms/ratcliff.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-report-c/#L2">PM-Rp5wT2</a></td>
+<td>Render recorded evidence. Each section has its own small writer.</td>
+<td><code dir="auto">src/report.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-sanitizer-options-c/#L1">PM-Sa8fQ3</a></td>
+<td></td>
+<td><code dir="auto">src/sanitizer_options.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-algorithms-c/#L2">PM-Sc4nV8</a></td>
+<td>Adapt every scorer to one rule: larger score means more similar.</td>
+<td><code dir="auto">src/algorithms/algorithms.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/docs-site-site-js/#L1">PM-Se3hW8</a></td>
+<td>Search local generated data, never a remote API.</td>
+<td><code dir="auto">docs/site/site.js</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/scripts-build-docs-py/#L2">PM-Si6tV4</a></td>
+<td>Build a complete offline source guide using Python’s standard library.</td>
+<td><code dir="auto">scripts/build_docs.py</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-dataset-c/#L432">PM-Sp7rK9</a></td>
+<td>Reject bad labels, duplicate cases and leakage before scoring.</td>
+<td><code dir="auto">src/dataset.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/docs-site-site-css/#L1">PM-St7yA2</a></td>
+<td>Fixed source navigation on desktop; stacked navigation on phones. Comments use calm green, with optional emphasis.</td>
+<td><code dir="auto">docs/site/site.css</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/tests-test-suite-c/#L2">PM-Te9aS4</a></td>
+<td>Assertions stop a broken implementation before benchmark ranking.</td>
+<td><code dir="auto">tests/test_suite.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-benchmark-c/#L26">PM-Ti6mC4</a></td>
+<td>Timing samples and trial means answer different questions.</td>
+<td><code dir="auto">src/benchmark.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-configuration-c/#L142">PM-Va2lG6</a></td>
+<td>Values stay strings until name resolution succeeds.</td>
+<td><code dir="auto">src/configuration.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-edit-c/#L153">PM-We5tJ1</a></td>
+<td>Global typing costs: nearby horizontal keys .5; digits 2; others 1.</td>
+<td><code dir="auto">src/algorithms/edit.c</code></td>
+</tr>
+<tr>
+<td><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/code/src-algorithms-algorithms-c/#L40">PM-Wi4zS6</a></td>
+<td>Jaro-Winkler adds a prefix bonus to [PM-Ja6rC3].</td>
+<td><code dir="auto">src/algorithms/algorithms.c</code></td>
+</tr>
+</tbody>
+</table>
+</div><footer class="sl-flex astro-ddtxxk7k"><div class="meta sl-flex astro-ddtxxk7k"></div><div class="pagination-links print:hidden astro-b5raizh3" dir="ltr"><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/source-files/" rel="prev" class="astro-b5raizh3"><svg aria-hidden="true" class="astro-b5raizh3 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg><span class="astro-b5raizh3">Previous<br class="astro-b5raizh3"><span class="link-title astro-b5raizh3">C99 source files</span></span></a><a href="/public/2026-11-07-fuzzy-match-algorithms-in-c99-astro-doc/dist/source-review/" rel="next" class="astro-b5raizh3"><svg aria-hidden="true" class="astro-b5raizh3 astro-hkc32dio" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg><span class="astro-b5raizh3">Next<br class="astro-b5raizh3"><span class="link-title astro-b5raizh3">Source readability changes</span></span></a></div></footer></div></div></main></div></div></div></div></body></html>

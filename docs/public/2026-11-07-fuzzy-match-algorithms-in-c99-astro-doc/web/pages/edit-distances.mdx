@@ -1,0 +1,55 @@
+---
+title: Levenshtein and the two adjacent-swap distances
+---
+
+## A cell stores the edit cost for two prefixes
+
+For `cat` and `cut`, each cell contains the cheapest cost of changing its row prefix into its column prefix. A prefix is the part of a string read so far.
+
+| Input prefix | Empty | c | cu | cut |
+|---|---:|---:|---:|---:|
+| Empty | 0 | 1 | 2 | 3 |
+| c | 1 | 0 | 1 | 2 |
+| ca | 2 | 1 | 1 | 2 |
+| cat | 3 | 2 | 2 | 1 |
+
+The bottom-right cell is 1. Replacing `a` with `u` is sufficient.
+
+## Compare three ways to finish the same prefixes
+
+For `ca -> cu`, deletion costs `1+1=2`, insertion costs `1+1=2`, and replacement costs `0+1=1`. Save the cheapest result. The implementation gives those three accumulated costs names:
+
+```c
+double delete_cost = previous[candidate_index] + 1;
+double insert_cost = current[candidate_index - 1] + 1;
+double replace_cost = previous[candidate_index - 1] + (different_letters ? 1 : 0);
+current[candidate_index] = fmin(delete_cost, fmin(insert_cost, replace_cost));
+```
+
+`previous[candidate_index]` describes one fewer input letter. `current[candidate_index - 1]` describes one fewer candidate letter. The diagonal cell describes one fewer letter from both strings. A matching letter adds zero; a replacement adds one.
+
+## Reuse row buffers without copying rows
+
+`current` and `previous` are pointers to arrays already inside `rows`. Choosing them does not allocate or copy a row. Taking a row number modulo 3 selects a reusable buffer. Column zero represents an empty candidate, so the arrays need one more column than the maximum string length.
+
+Levenshtein needs only the current and previous rows. The restricted adjacent-swap method also needs the row two positions earlier. This shared implementation therefore reserves three buffers.
+
+## The restricted method adds one adjacent-swap option
+
+The formal name is **Optimal String Alignment**, often abbreviated OSA. In plain terms, it adds adjacent swaps but restricts further editing of the swapped substring under its recurrence.
+
+For `ab -> ba`, it can use the cell two rows and two columns earlier, then add a swap cost of 1. Plain Levenshtein needs two substitutions.
+
+## The full method can combine a swap with another edit
+
+Full Damerau-Levenshtein stores the matrix and older matching positions for each letter. It can combine a transposition with later edits.
+
+For `ca -> abc`, a shortest sequence is `ca -> ac -> abc`: swap, then insert. The full method returns 2. The restricted method returns 3 because its recurrence cannot reuse the swapped region in that way.
+
+## Read the implementation and its reference explanations
+
+[Read the edit-distance article and source](/code/src-algorithms-edit-c/#L1). It places a worked three-choice calculation next to the loop. Stable editor-search tags are `PM-Lv2pR6`, `PM-Os3bF9` and `PM-Dl8xA4`.
+
+[Allison's explanation](https://www.allisons.org/ll/AlgDS/Dynamic/Edit/) connects edit choices to neighboring cells. [Erickson's chapter, section 3.7](https://jeffe.cs.illinois.edu/teaching/algorithms/book/03-dynprog.pdf), develops edit alignments. The [reference guide](/reference/learning-resources/) links the two swap variants and the other algorithm families.
+
+The tests compare Levenshtein and full Damerau-Levenshtein with a shortest-path graph that does not use their recurrence. [Read the independent test source](/code/tests-test-suite-c/#L1).

@@ -1,0 +1,9 @@
+---
+import sourceIndex from '../generated/source-index.json';
+const { file, start = 1, end } = Astro.props;
+const record = (sourceIndex as Record<string, {htmlLines: string[]; lines: number; functions: {name: string; line: number}[]}>)[file];
+if (!record) throw new Error(`Source file missing from generated index: ${file}`);
+const selectedLines = record.htmlLines.slice(start - 1, end ?? record.lines).join('');
+---
+{start === 1 && <div class="source-actions" data-pagefind-ignore><a href={`/raw/${file}`} download>Download complete source</a></div>}
+<div class="annotated-source"><pre class="source"><code set:html={selectedLines} /></pre></div>

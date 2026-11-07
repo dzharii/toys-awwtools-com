@@ -1,0 +1,55 @@
+---
+title: Configuration parsing and resolution sequence
+---
+
+The input has a misspelled property name. Its value contains another equals sign.
+
+```ini
+database connection strng = Server=localhost;
+```
+
+## Split the entry at the first equals sign
+
+`parse_entry()` produces an `Entry` with two strings.
+
+```text
+key:   database connection strng
+value: Server=localhost;
+```
+
+The parser trims surrounding ASCII whitespace. It preserves the later equals sign and semicolon in the value.
+
+[Read the parser source](/code/src-parser-c/#L1). Reference tag: `PM-Pa7kQ2`.
+
+## Normalize characters and preserve tokens
+
+`prepare()` stores a joined character sequence and an ordered token sequence.
+
+```text
+text:   databaseconnectionstrng
+tokens: database | connection | strng
+```
+
+Character algorithms compare `text`. The token hybrid also compares the words. Unsupported punctuation and non-ASCII bytes cause rejection.
+
+[Read normalization and tokenization](/code/src-normalization-c/#L1). Reference tag: `PM-No4mT8`.
+
+## Check exact normalized matches before fuzzy scores
+
+The canonical name normalizes to `databaseconnectionstring`. It differs from the input because `strng` is missing `i`, so this lookup proceeds to fuzzy matching.
+
+Levenshtein distance is 1. The canonical name contains 24 normalized characters, so its similarity is `1 - 1/24`, approximately `0.9583`.
+
+[Read the edit-distance calculations](/edit-distances/). Reference tag: `PM-Lv2pR6`.
+
+## Apply the score threshold and runner-up margin
+
+The resolver scores every candidate and retains the best two. A candidate must meet the minimum score and lead the runner-up by the required margin. Equal best scores are ambiguous. An optional edit cap can reject the candidate afterward.
+
+[Read the acceptance and rejection rules](/acceptance-policy/). Reference tag: `PM-Re6vN1`.
+
+## Validate values before applying the configuration
+
+The binder checks value types, duplicate canonical properties and missing required properties. It validates the complete batch before changing the destination. A validation failure leaves the previous configuration unchanged.
+
+[Read the binding source](/code/src-configuration-c/#L1). Reference tag: `PM-Bi7nA3`.

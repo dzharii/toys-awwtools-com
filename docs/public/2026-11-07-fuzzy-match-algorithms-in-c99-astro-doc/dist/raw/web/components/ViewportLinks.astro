@@ -1,0 +1,29 @@
+<!-- An iframe supplies a real CSS viewport without depending on popup sizing. -->
+<div class="viewport-actions" data-pagefind-ignore>
+  <button data-viewport="390,844" type="button">Show portrait 390 x 844</button>
+  <button data-viewport="844,390" type="button">Show landscape 844 x 390</button>
+  <button data-viewport="320,640" type="button">Show small portrait 320 x 640</button>
+</div>
+<p id="viewport-label" data-pagefind-ignore>Requested CSS viewport: 390 x 844</p>
+<div class="viewport-scroll" data-pagefind-ignore>
+  <iframe id="layout-frame" title="Source article at test viewport" src="/code/src-algorithms-edit-c/" width="390" height="844" style="width:390px;height:844px"></iframe>
+</div>
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-viewport]').forEach(button => {
+    button.addEventListener('click', () => {
+      const [width, height] = button.dataset.viewport!.split(',').map(Number);
+      const frame = document.getElementById('layout-frame') as HTMLIFrameElement;
+      frame.width = String(width);
+      frame.height = String(height);
+      frame.style.width = `${width}px`;
+      frame.style.height = `${height}px`;
+      document.getElementById('viewport-label')!.textContent = `Requested CSS viewport: ${width} x ${height}`;
+    });
+  });
+</script>
+<style>
+  .viewport-actions { display:flex; flex-wrap:wrap; gap:1rem; }
+  button { font:inherit; min-height:44px; padding:.5rem .75rem; border:1px solid var(--sl-color-gray-4); border-radius:.3rem; background:var(--sl-color-bg-nav); color:var(--sl-color-text); cursor:pointer; }
+  .viewport-scroll { max-width:100%; overflow:auto; }
+  iframe { display:block; box-sizing:content-box; border:1px solid var(--sl-color-gray-4); max-width:none; }
+</style>

@@ -1,0 +1,41 @@
+---
+title: Acceptance and rejection rules
+---
+
+A high score does not establish which property the user intended. The resolver applies these rules in order.
+
+## Accept a unique normalized exact match
+
+Case, spaces, underscores and hyphens do not change the normalized name. A unique exact match bypasses fuzzy thresholds. A registry with normalization collisions is invalid.
+
+## Require a minimum fuzzy score
+
+When exact matching fails, the selected algorithm scores every candidate. If the highest score is below the calibrated threshold, the resolver returns `MATCH_UNKNOWN`.
+
+## Require a lead over the second candidate
+
+Equal best scores always return `MATCH_AMBIGUOUS`. A smaller-than-required margin also returns ambiguity. Lexical ordering makes suggestions deterministic; it does not authorize acceptance of a tie.
+
+## Enforce an optional edit cap
+
+The four edit-distance methods can reject a candidate whose edit cost exceeds the configured limit. `max_edits = -1` disables this check. Exact matches are unaffected.
+
+## Distinguish the resolver statuses
+
+| Status | Meaning |
+|---|---|
+| `MATCH_EXACT` | One canonical name has the same normalized spelling. |
+| `MATCH_FUZZY` | The highest-scoring candidate passed the acceptance checks. |
+| `MATCH_AMBIGUOUS` | The score is sufficient but the best candidates are tied or too close. |
+| `MATCH_UNKNOWN` | No candidate passed the score or edit-cap requirement. |
+| `MATCH_INVALID` | The key cannot be prepared or the registry has a normalization collision. |
+
+Rejected results can include suggestions. The binder applies only exact and accepted fuzzy matches.
+
+## Calibrate policies before held-out evaluation
+
+Each algorithm has its own minimum score and margin. Calibration minimizes the configured error cost on calibration data. All policies are frozen before held-out evaluation.
+
+A rejected intended typo has default cost 1. A wrong-target, unknown or ambiguous automatic acceptance has default cost 100. These costs express a preference for rejection over silent misassignment.
+
+[Read the resolver source](/code/src-resolver-c/#L1) and [calibration methods](/reference/benchmark-methods/).

@@ -1,0 +1,21 @@
+---
+import DefaultHead from '@astrojs/starlight/components/Head.astro';
+import regularFont from '@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-400-normal.woff2?url';
+---
+<DefaultHead />
+<link rel="preload" href={regularFont} as="font" type="font/woff2" crossorigin="anonymous" />
+<meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#111821" media="(prefers-color-scheme: dark)" />
+<script is:inline>
+  try {
+    const preferences = JSON.parse(localStorage.getItem('c99-reader') || '{}');
+    const root = document.documentElement;
+    if (['standard', 'large', 'larger'].includes(preferences.size)) root.dataset.readingSize = preferences.size;
+    // Old focus/wrap settings are retired. Source always wraps; only navigation collapses.
+    if (preferences.collapsed) root.dataset.navigationCollapsed = 'true';
+    if (Number.isFinite(preferences.width) && preferences.width >= 200 && preferences.width <= 420) {
+      root.dataset.navigationWidth = String(preferences.width);
+      root.style.setProperty('--reader-sidebar-width', preferences.width + 'px');
+    }
+  } catch { /* Defaults work when browser settings disable storage. */ }
+</script>
