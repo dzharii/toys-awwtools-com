@@ -1,0 +1,5 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';
+const {problems}=JSON.parse(fs.readFileSync('dist/catalog.json','utf8'));const ledger=JSON.parse(fs.readFileSync('docs/research.json','utf8'));const records=Array.isArray(ledger)?ledger:ledger.problems||ledger.admitted||ledger.entries;
+assert.ok(problems.length>0);assert.equal(new Set(problems.map(p=>p.id)).size,problems.length);assert.equal(new Set(problems.map(p=>p.slug)).size,problems.length);
+for(const p of problems){assert.ok(Number.isSafeInteger(p.id)&&p.id>0);assert.ok(['Medium','Hard'].includes(p.difficulty));assert.match(p.slug,/^[a-z0-9]+(?:-[a-z0-9]+)*$/);assert.ok(p.title.length>2&&p.summary.length>20);assert.deepEqual(Object.keys(p).sort(),['difficulty','id','slug','summary','title']);const evidence=records.find(r=>r.id===p.id);assert.ok(evidence,`Missing research ${p.id}`);assert.ok(evidence.discoveryScore<=2&&evidence.implementationScore<=2,`Scores ${p.id}`);assert.ok(evidence.sources.length>0,`Sources ${p.id}`);}
+console.log(`Validated ${problems.length} unique, spoiler-free catalog entries against the research ledger.`);
