@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A compact SSML developer reference: Azure voice compatibility, copyable examples, integration patterns, and verified tools and documentation.">
+    <title>SSML reference | Syntax, examples, and Azure Speech</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="lib/lib-asvd-microlight-0.0.7/microlight.js" defer></script>
+    <script src="reference.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to reference</a>
+    <header class="masthead">
+        <a href="../../">Docs index</a>
+        <span>Speech Synthesis Markup Language</span>
+        <a href="ssml-reference.pdf" download>Download reference PDF</a>
+    </header>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="search" data-enhance hidden>
+                <label for="reference-search">Find in this reference</label>
+                <input id="reference-search" type="search" placeholder="Try: phoneme, latency, tools" autocomplete="off" aria-controls="search-results" aria-describedby="search-status">
+                <p id="search-status" class="small" role="status"></p>
+                <ul id="search-results" hidden></ul>
+            </div>
+            <nav aria-label="On this page">
+                <p class="nav-title">On this page</p>
+                <ol>
+                    <li><a href="#start">Start here</a></li>
+                    <li><a href="#syntax">Syntax &amp; controls</a></li>
+                    <li><a href="#voices">Voice compatibility</a></li>
+                    <li><a href="#examples">Examples</a></li>
+                    <li><a href="#workbench">Check &amp; share SSML</a></li>
+                    <li><a href="#integration">Call Azure Speech</a></li>
+                    <li><a href="#architecture">Application patterns</a></li>
+                    <li><a href="#troubleshooting">Troubleshooting</a></li>
+                    <li><a href="#resources">Tools &amp; further reading</a></li>
+                </ol>
+            </nav>
+            <div class="sidebar-links">
+                <a href="azure_speech_ssml_reference.md" download>Narration reference Markdown</a>
+                <button type="button" id="print-reference" data-enhance hidden>Print / save this page as PDF</button>
+            </div>
+        </aside>
+        <main id="main">
+            <header class="intro">
+                <h1>SSML reference</h1>
+                <p>Control pronunciation, timing, and delivery in text-to-speech applications.</p>
+                <p class="meta">Azure Speech SSML 1.0 + Microsoft extensions. Sources checked <time datetime="2026-11-14">14 November 2026</time>.</p>
+            </header>
+
+            <section id="start" aria-labelledby="start-title">
+                <h2 id="start-title"><a href="#start"><span class="section-number">01</span> Start here</a></h2>
+                <p><strong>SSML is XML input to speech synthesis, not an audio format.</strong> It controls pronunciation and timing. Choose a voice that supports the controls you need: different engines or voice families may ignore or reject the same tags.</p>
+                <p>This page uses <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-structure">Azure's SSML 1.0 dialect</a>. The W3C also publishes <a href="https://www.w3.org/TR/speech-synthesis11/">SSML 1.1</a>; that does not mean Azure accepts every 1.1 feature.</p>
+                <div class="decision-grid">
+                    <div><h3 id="start-script">I have a script</h3><p>Copy the document below. Use <a href="#foundry-workflow">Audio Content Creation</a> to hear it, then adjust one control at a time.</p></div>
+                    <div><h3 id="start-code">I am building an app</h3><p>Start with the <a href="#python-sample">Python SDK sample</a>. Choose <a href="#architecture">pre-rendered, on-demand, or conversational audio</a> based on when the text changes.</p></div>
+                    <div><h3 id="start-tag">I need a specific effect</h3><p>Find the <a href="#syntax">control</a>, check <a href="#voices">voice compatibility</a>, then load an <a href="#examples">example</a> into the local editor.</p></div>
+                </div>
+                <article class="example" id="starter" data-complete="true">
+                    <div class="example-heading"><h3>A complete Azure document</h3><span class="badge">Standard neural</span></div>
+                    <p><code>en-US-JennyNeural</code> is a non-HD voice used for the timing examples. Check availability in your resource's region.</p>
+                    <pre><code class="language-xml">&lt;speak version="1.0"
+       xmlns="http://www.w3.org/2001/10/synthesis"
+       xmlns:mstts="https://www.w3.org/2001/mstts"
+       xml:lang="en-US"&gt;
+  &lt;voice name="en-US-JennyNeural"&gt;
+    &lt;p&gt;Welcome to the &lt;sub alias="speech synthesis markup language"&gt;SSML&lt;/sub&gt; reference.&lt;/p&gt;
+    &lt;p&gt;Read the example.&lt;break time="400ms"/&gt;Then change one setting.&lt;/p&gt;
+  &lt;/voice&gt;
+&lt;/speak&gt;</code></pre>
+                    <p class="small">Expected effect: expand the abbreviation, separate the paragraphs, and pause at the explicit break. Natural punctuation also affects timing.</p>
+                </article>
+                <h3 id="foundry-workflow">Hear an example in Foundry</h3>
+                <ol class="steps">
+                    <li>Copy a <strong>complete</strong> SSML document from this page or download it as UTF-8 text.</li>
+                    <li>Open your project in <a href="https://ai.azure.com/">Microsoft Foundry</a> (also called Azure AI Foundry). Go to <strong>Playgrounds &gt; Speech playground &gt; Text to speech &gt; Audio content creation</strong>.</li>
+                    <li>Create a tuning file and paste the document, or use <strong>Upload &gt; Text file</strong> with the downloaded <code>.txt</code>. Choose a supported voice and preview with <strong>Play</strong>.</li>
+                    <li>Adjust the script, stop and replay to regenerate, then save or export WAV/MP3 when satisfied.</li>
+                </ol>
+                <p class="note">Requires an Azure subscription, project/resource permissions, and a supported voice. Synthesis uses your Azure resource and can incur charges. The tool accepts up to 20,000 characters per tuning file. <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-audio-content-creation">Official workflow and limits</a>.</p>
+                <p>Alternative: <a href="https://speech.microsoft.com/portal/audiocontentcreation">Speech Studio Audio Content Creation</a> with a Speech resource. Foundry resources are not supported in Speech Studio. Use the <a href="https://speech.microsoft.com/portal/voicegallery">Voice Gallery</a> to compare personas before tuning.</p>
+            </section>
+
+            <section id="syntax" aria-labelledby="syntax-title">
+                <h2 id="syntax-title"><a href="#syntax"><span class="section-number">02</span> Syntax &amp; controls</a></h2>
+                <p>An Azure document has one <code>&lt;speak&gt;</code> root, <code>version="1.0"</code>, a default SSML namespace, <code>xml:lang</code>, and at least one named <code>&lt;voice&gt;</code>. Add the <code>mstts</code> namespace when using Microsoft extensions. Namespace URIs identify vocabularies; they are not API endpoints.</p>
+                <div class="table-scroll">
+                    <table>
+                        <caption>Choose a control by the effect you need</caption>
+                        <thead><tr><th scope="col">Need</th><th scope="col">Element / setting</th><th scope="col">Meaning and caution</th></tr></thead>
+                        <tbody>
+                            <tr><td>Group thoughts</td><td><a href="#ex-structure"><code>p</code>, <code>s</code></a></td><td>Paragraph and sentence boundaries. Ordinary punctuation is often enough.</td></tr>
+                            <tr><td>Pause at a position</td><td><a href="#ex-break"><code>break time="400ms"</code></a></td><td>Explicit pause in seconds or milliseconds. Azure allows 0-20,000 ms; <code>time</code> overrides <code>strength</code>.</td></tr>
+                            <tr><td>Speak digits or dates</td><td><a href="#ex-say-as"><code>say-as interpret-as</code></a></td><td>Interpret the enclosed text as a data type. Date/time formats and interpretations are locale-dependent.</td></tr>
+                            <tr><td>Expand an abbreviation</td><td><a href="#ex-alias"><code>sub alias</code></a></td><td>Speak the alias instead of the enclosed text. Good first choice for product names and acronyms.</td></tr>
+                            <tr><td>Specify exact sounds</td><td><a href="#ex-phoneme"><code>phoneme alphabet ph</code></a></td><td>Use the voice locale's phone set. Keep readable text inside the element.</td></tr>
+                            <tr><td>Reuse a pronunciation dictionary</td><td><a href="#ex-lexicon"><code>lexicon uri</code></a></td><td>Reference a service-accessible PLS/XML file. It is a separate document, not an inline SSML dictionary.</td></tr>
+                            <tr><td>Change speed or pitch</td><td><a href="#ex-prosody"><code>prosody rate pitch volume</code></a></td><td>Adjust a span, preferably a sentence. <code>range</code> and <code>contour</code> add pitch shaping; HD models do not support this element.</td></tr>
+                            <tr><td>Stress a word</td><td><a href="#ex-emphasis"><code>emphasis level</code></a></td><td><code>reduced</code>, <code>none</code>, <code>moderate</code>, <code>strong</code>. Azure word-level emphasis is limited to specific voices.</td></tr>
+                            <tr><td>Change speaking language</td><td><a href="#ex-language"><code>lang xml:lang</code></a></td><td>Use a multilingual voice that supports the language. Does not translate the text.</td></tr>
+                            <tr><td>Choose a persona</td><td><code>voice name</code></td><td>A voice name selects both persona and model family. Several sibling <code>voice</code> elements can form a dialogue.</td></tr>
+                            <tr><td>Add a sound clip</td><td><a href="#ex-audio"><code>audio src</code></a></td><td>The service fetches the clip. Keep spoken fallback text. Requires a supported model and compatible audio asset.</td></tr>
+                            <tr><td>Synchronize application state</td><td><a href="#ex-bookmark"><code>bookmark mark</code></a></td><td>Emit a silent SDK event at a script position; not an audible pause.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h3 id="xml-rules">XML rules that prevent common failures</h3>
+                <ul class="compact-list">
+                    <li>Escape literal <code>&amp;</code> as <code>&amp;amp;</code>, <code>&lt;</code> as <code>&amp;lt;</code>, and <code>&gt;</code> as <code>&amp;gt;</code>. In quoted attributes, escape the matching quotation mark as <code>&amp;quot;</code> or <code>&amp;apos;</code>.</li>
+                    <li>Quote attribute values and close every tag. HTML tags such as <code>&lt;b&gt;</code> and <code>&lt;br&gt;</code> are not SSML controls.</li>
+                    <li>Keep prose as text, not raw markup, when inserting data into a template. XML escaping and JSON escaping are separate steps.</li>
+                    <li>Source newlines are not a portable pause control. Use punctuation, structural elements, or a supported <code>break</code>.</li>
+                    <li>An XML comment documents intent for an editor; it does not direct the voice. Avoid DTDs and external entities.</li>
+                </ul>
+                <p class="source-line">Details: <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-structure">structure and events</a>, <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-pronunciation">pronunciation</a>, <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-voice">voice and sound</a>.</p>
+            </section>
+
+            <section id="voices" aria-labelledby="voices-title">
+                <h2 id="voices-title"><a href="#voices"><span class="section-number">03</span> Voice compatibility</a></h2>
+                <p><strong>Choose the model before choosing tags.</strong> A newer or more expressive voice does not necessarily support more SSML. The matrix below summarizes Azure's documentation, not live synthesis tests.</p>
+                <div class="table-scroll">
+                    <table class="compatibility">
+                        <caption>Azure Speech capabilities by voice family</caption>
+                        <thead><tr><th scope="col">Control</th><th scope="col">Standard neural<br><small>e.g. JennyNeural</small></th><th scope="col">Dragon HD</th><th scope="col">Dragon HD Omni</th></tr></thead>
+                        <tbody>
+                            <tr><th scope="row"><code>voice</code>, <code>p</code>, <code>s</code>, <code>sub</code>, <code>say-as</code></th><td>Supported</td><td>Supported</td><td>Supported</td></tr>
+                            <tr><th scope="row"><code>lang</code></th><td>Multilingual voices</td><td>Supported</td><td>Supported</td></tr>
+                            <tr><th scope="row"><code>break</code></th><td>Supported</td><td>Supported</td><td>Not supported</td></tr>
+                            <tr><th scope="row"><code>prosody</code></th><td>Supported</td><td>Not supported</td><td>Not supported</td></tr>
+                            <tr><th scope="row"><code>phoneme</code></th><td>Supported locales</td><td>Supported</td><td>Not supported</td></tr>
+                            <tr><th scope="row"><code>lexicon</code></th><td>Supported locales</td><td>Aliases only</td><td>Aliases only</td></tr>
+                            <tr><th scope="row"><code>mstts:express-as</code></th><td>Selected voices/styles</td><td>Docs conflict *</td><td>Supported styles</td></tr>
+                            <tr><th scope="row"><code>emphasis</code></th><td>Selected voices</td><td>Not supported</td><td>Not supported</td></tr>
+                            <tr><th scope="row"><code>audio</code>, background audio, silence, bookmarks, visemes</th><td>Feature-specific support</td><td>Not supported</td><td>Not supported</td></tr>
+                            <tr><th scope="row">Word-boundary events</th><td>Speech SDK</td><td>Check exact voice</td><td>Documented support</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="note">* Microsoft's <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/high-definition-voices#supported-and-unsupported-ssml-elements-for-azure-speech-hd-voices">HD compatibility table</a> says Dragon HD does not support <code>mstts:express-as</code>, but the same page and <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-voice#styles-and-paralinguistic-in-hd-voices">voice guide</a> show HD style examples. Do not assume support: audition the exact voice, region, and API path. This page's expressive HD example uses Omni.</p>
+                <h3 id="model-selection">Which voice family to start with</h3>
+                <dl class="reference-list">
+                    <dt>Standard neural</dt><dd>Start here for explicit pauses, speed/pitch adjustments, pronunciation control, or SDK bookmarks. Styles and roles are per-voice; consult the <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=tts#voice-styles-and-roles">styles/roles list</a>.</dd>
+                    <dt>Dragon HD / Omni</dt><dd>Use for contextual, expressive narration when the smaller control set is acceptable. For example, <code>en-US-Andrew:DragonHDOmniLatestNeural</code> is not interchangeable with <code>en-US-AndrewNeural</code>. <code>LatestNeural</code> tracks model updates, so output can change over time.</dd>
+                    <dt>Dragon HD Flash</dt><dd>A separate HD variant with voice-specific styles and language/region restrictions. Use its <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/high-definition-voices#dragon-hd-flash-voices">own capability list</a>; do not extrapolate from Omni.</dd>
+                    <dt>MAI-Voice-2.1 / Flash</dt><dd><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/mai-voices">Public preview as of the source check</a>. Uses SSML with model-specific voices and styles, such as <code>happiness</code>. Do not transfer Dragon or Jenny style tokens blindly. Voice cloning is gated and requires authorized, consented voices.</dd>
+                    <dt>OpenAI voices</dt><dd>The <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/openai-voices">Azure OpenAI audio API does not support SSML</a>. OpenAI voices exposed through <em>Azure Speech</em> support a subset. Same persona, different API contract: a Foundry project alone does not make an audio endpoint SSML-capable.</dd>
+                </dl>
+                <p class="source-line">Before deployment: verify the <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech#get-a-list-of-voices">regional voices API</a>, <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/regions?tabs=tts">regions</a>, and <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=tts">language support</a>. Neither this page nor a local XML check can confirm that a voice is provisioned.</p>
+                <h3 id="extensions">Microsoft extensions: when they are useful</h3>
+                <div class="table-scroll">
+                    <table>
+                        <caption>Extensions are not portable W3C controls</caption>
+                        <thead><tr><th scope="col">Extension</th><th scope="col">Use and constraints</th></tr></thead>
+                        <tbody>
+                            <tr><td><a href="#ex-style"><code>mstts:express-as</code></a></td><td>Speaking style; selected standard voices also support <code>styledegree</code> (0.01-2, default 1) and <code>role</code>. Unsupported styles can fall back to neutral delivery.</td></tr>
+                            <tr><td><a href="#ex-silence"><code>mstts:silence</code></a></td><td>Leading, trailing, or sentence-boundary silence across a voice block. <code>-exact</code> types replace natural silence; ordinary types add to it.</td></tr>
+                            <tr><td><code>mstts:backgroundaudio</code></td><td>Mix a service-accessible music/ambient asset under speech. Place under <code>speak</code>, not <code>voice</code>. Standard neural; check file requirements.</td></tr>
+                            <tr><td><code>mstts:audioduration</code></td><td>Fit speech to a target duration within documented bounds. Standard neural; not a universal substitute for editing the script.</td></tr>
+                            <tr><td><code>mstts:viseme</code></td><td>Request supported facial/mouth output for animation. Needs SDK event handling and a supported voice/locale; it does not animate a UI by itself.</td></tr>
+                            <tr><td><a href="#ex-dialog"><code>mstts:dialog</code>, <code>mstts:turn</code></a></td><td>Context-aware dialogue with a specific multi-talker model, rather than arbitrary named standard voices.</td></tr>
+                            <tr><td><code>mstts:markdown</code>, <code>mstts:prompt</code>, <code>mstts:mathspeechverbosity</code></td><td>Specialized Markdown/math reading. See the <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-pronunciation">pronunciation guide</a> for voice, locale, and format restrictions.</td></tr>
+                            <tr><td><code>mstts:ttsembedding</code>, <code>mstts:voiceconversion</code></td><td>Personal voice / voice conversion workflows, not general narration controls. Check <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/personal-voice-how-to-use">access and consent requirements</a> before designing around them.</td></tr>
+                            <tr><td><a href="#ex-omni"><code>voice parameters</code></a></td><td>Model-specific generation settings such as Omni temperature. These are not generic SSML prosody attributes.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="examples" aria-labelledby="examples-title">
+                <h2 id="examples-title"><a href="#examples"><span class="section-number">04</span> Examples</a></h2>
+                <p>Most examples show the content <strong>inside a voice block</strong>. With JavaScript enabled, <strong>Load complete SSML</strong> adds the correct document wrapper and example voice in the <a href="#workbench">editor</a>. Without JavaScript, place the snippet inside the starter document and use the voice stated on the example.</p>
+                <div class="example-grid">
+                    <article class="example" id="ex-structure" data-voice="en-US-JennyNeural">
+                        <div class="example-heading"><h3>Paragraphs &amp; sentences</h3><span class="badge">Standard / HD / Omni</span></div>
+                        <pre><code class="language-xml">&lt;p&gt;&lt;s&gt;The build passed.&lt;/s&gt; &lt;s&gt;Review the release notes.&lt;/s&gt;&lt;/p&gt;
+&lt;p&gt;Next, deploy to staging.&lt;/p&gt;</code></pre>
+                        <p>Separate thoughts, not every phrase. Punctuation already provides natural sentence boundaries.</p>
+                    </article>
+                    <article class="example" id="ex-break" data-voice="en-US-JennyNeural">
+                        <div class="example-heading"><h3>An explicit pause</h3><span class="badge">Standard / Dragon HD</span></div>
+                        <pre><code class="language-xml">Check the region.&lt;break time="600ms"/&gt;Then retry.</code></pre>
+                        <p>Hear a pause between the instructions. Not supported by Dragon HD Omni; use natural phrasing there.</p>
+                    </article>
+                    <article class="example" id="ex-alias" data-voice="en-US-JennyNeural">
+                        <div class="example-heading"><h3>Expand an acronym</h3><span class="badge">Standard / HD / Omni</span></div>
+                        <pre><code class="language-xml">Call the &lt;sub alias="application programming interface"&gt;API&lt;/sub&gt;.</code></pre>
+                        <p>Hear the expansion instead of "API". An alias is easier to maintain than phonetic spelling when exact sounds are unnecessary.</p>
+                    </article>
+                    <article class="example" id="ex-say-as" data-voice="en-US-JennyNeural">
+                        <div class="example-heading"><h3>Digits, ordinals &amp; dates</h3><span class="badge">Standard / HD / Omni</span></div>
+                        <pre><code class="language-xml">Code: &lt;say-as interpret-as="characters"&gt;2048&lt;/say-as&gt;.
+Attempt &lt;say-as interpret-as="ordinal"&gt;3&lt;/say-as&gt;.
+Date: &lt;say-as interpret-as="date" format="ymd"&gt;2026-11-14&lt;/say-as&gt;.</code></pre>
+                        <p>Distinguish "two zero four eight" from a cardinal number. The date's spoken wording depends on the locale.</p>
+                    </article>
+                    <article class="example" id="ex-prosody" data-voice="en-US-JennyNeural">
+                        <div class="example-heading"><h3>Slower delivery</h3><span class="badge">Standard neural</span></div>
+                        <pre><code class="language-xml">&lt;prosody rate="-15%" pitch="+2st"&gt;
+  Keep a copy of the original configuration.
+&lt;/prosody&gt;</code></pre>
+                        <p>Reduce rate and raise pitch by two semitones. Compare rate alone first; avoid changing every dimension at once.</p>
+                    </article>
+                    <article class="example" id="ex-phoneme" data-voice="en-US-JennyNeural">
+                        <div class="example-heading"><h3>A pronunciation override</h3><span class="badge">Standard / Dragon HD</span></div>
+                        <pre><code class="language-xml">&lt;phoneme alphabet="sapi" ph="iy eh n y uw eh s"&gt;en-US&lt;/phoneme&gt;</code></pre>
+                        <p>An English SAPI phone sequence for "en-US". Use the <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-ssml-phonetic-sets">locale's phonetic alphabet</a>; arbitrary IPA/SAPI sequences can fail.</p>
+                    </article>
+                    <article class="example" id="ex-style" data-voice="en-US-JennyNeural">
+                        <div class="example-heading"><h3>A restrained speaking style</h3><span class="badge">JennyNeural</span></div>
+                        <pre><code class="language-xml">&lt;mstts:express-as style="cheerful" styledegree="0.5"&gt;
+  Your export is ready.
+&lt;/mstts:express-as&gt;</code></pre>
+                        <p>Request a softer cheerful delivery. <code>styledegree</code> only works when supported by the selected voice.</p>
+                    </article>
+                    <article class="example" id="ex-emphasis" data-voice="en-US-GuyNeural">
+                        <div class="example-heading"><h3>Word-level emphasis</h3><span class="badge">GuyNeural</span></div>
+                        <pre><code class="language-xml">Keep the &lt;emphasis level="strong"&gt;original&lt;/emphasis&gt; file.</code></pre>
+                        <p>Request extra stress on "original". The <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-voice#adjust-emphasis">voice guide</a> lists Guy, Davis, and Jane neural voices for word-level emphasis. Do not substitute Jenny or an HD voice.</p>
+                    </article>
+                    <article class="example" id="ex-language" data-voice="en-US-AvaMultilingualNeural">
+                        <div class="example-heading"><h3>A multilingual sentence</h3><span class="badge">AvaMultilingualNeural</span></div>
+                        <pre><code class="language-xml">The greeting is &lt;lang xml:lang="es-ES"&gt;buenos d&#237;as&lt;/lang&gt;.</code></pre>
+                        <p>Switch the pronunciation language while keeping a multilingual persona. Translation must happen before synthesis.</p>
+                    </article>
+                    <article class="example" id="ex-silence" data-voice="en-US-JennyNeural">
+                        <div class="example-heading"><h3>Silence at sentence boundaries</h3><span class="badge">Standard neural</span></div>
+                        <pre><code class="language-xml">&lt;mstts:silence type="Sentenceboundary-exact" value="500ms"/&gt;
+The upload finished. The review can begin.</code></pre>
+                        <p>Set boundary silence across the enclosing voice block. Unlike <code>break</code>, this is not a marker placed between arbitrary words.</p>
+                    </article>
+                    <article class="example" id="ex-bookmark" data-voice="en-US-JennyNeural">
+                        <div class="example-heading"><h3>A synchronization marker</h3><span class="badge">Standard neural + SDK</span></div>
+                        <pre><code class="language-xml">&lt;bookmark mark="step-2"/&gt;Now open the settings panel.</code></pre>
+                        <p>Listen for the SDK's <code>BookmarkReached</code> event to highlight a step. The marker itself is silent. Use its audio offset, not event-arrival time.</p>
+                    </article>
+                    <article class="example" id="ex-audio" data-voice="en-US-JennyNeural">
+                        <div class="example-heading"><h3>An external sound with fallback</h3><span class="badge">Asset required</span></div>
+                        <pre><code class="language-xml">&lt;audio src="https://YOUR-HOST.example/cue.wav"&gt;
+  The notification sound is unavailable.
+&lt;/audio&gt;
+Your export is ready.</code></pre>
+                        <p><strong>Replace the placeholder URL.</strong> Azure must be able to fetch a compatible file. The element's text is spoken if the clip cannot play. Check <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-voice#add-recorded-audio">audio requirements</a>.</p>
+                    </article>
+                    <article class="example" id="ex-omni" data-voice="en-US-Andrew:DragonHDOmniLatestNeural" data-parameters="temperature=0.7;top_p=0.7;top_k=22;cfg_scale=1.4">
+                        <div class="example-heading"><h3>Expressive Omni narration</h3><span class="badge">Dragon HD Omni</span></div>
+                        <pre><code class="language-xml">&lt;p&gt;The first test did not pass.&lt;/p&gt;
+&lt;p&gt;&lt;mstts:express-as style="encouraging"&gt;We have isolated the cause. Let's try again.&lt;/mstts:express-as&gt;&lt;/p&gt;</code></pre>
+                        <p>Uses <code>en-US-Andrew:DragonHDOmniLatestNeural</code>, not Jenny. The complete document includes Omni's documented default parameters. There is no <code>break</code> or <code>prosody</code>.</p>
+                    </article>
+                    <article class="example" id="ex-dialog" data-complete="true">
+                        <div class="example-heading"><h3>A multi-talker exchange</h3><span class="badge">Specific model / preview</span></div>
+                        <pre><code class="language-xml">&lt;speak version="1.0" xml:lang="en-US"
+       xmlns="http://www.w3.org/2001/10/synthesis"
+       xmlns:mstts="https://www.w3.org/2001/mstts"&gt;
+  &lt;voice name="en-US-MultiTalker-Ava-Andrew:DragonHDLatestNeural"&gt;
+    &lt;mstts:dialog&gt;
+      &lt;mstts:turn speaker="ava"&gt;What changed in this release?&lt;/mstts:turn&gt;
+      &lt;mstts:turn speaker="andrew"&gt;We added an offline export.&lt;/mstts:turn&gt;
+    &lt;/mstts:dialog&gt;
+  &lt;/voice&gt;
+&lt;/speak&gt;</code></pre>
+                        <p>The model retains dialogue context across turns. Speaker IDs belong to this model. Check <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=tts#multi-talker-voices">multi-talker availability</a> rather than inventing IDs.</p>
+                    </article>
+                </div>
+                <h3 id="ex-lexicon">A reusable pronunciation lexicon</h3>
+                <p>Save the separate file below as <code>terms.pls</code> and host it where Azure can fetch it. Reference it inside a voice with <code>&lt;lexicon uri="https://YOUR-HOST.example/terms.pls"/&gt;</code>. The placeholder is not runnable. For HD/Omni, use alias entries rather than phonemes.</p>
+                <pre><code class="language-xml">&lt;lexicon version="1.0" alphabet="ipa" xml:lang="en-US"
+         xmlns="http://www.w3.org/2005/01/pronunciation-lexicon"&gt;
+  &lt;lexeme&gt;
+    &lt;grapheme&gt;SDK&lt;/grapheme&gt;
+    &lt;alias&gt;software development kit&lt;/alias&gt;
+  &lt;/lexeme&gt;
+&lt;/lexicon&gt;</code></pre>
+                <p>Entries are case-sensitive and each lexicon is for one locale. Azure documents a 100 KB maximum and a URI-keyed cache of up to 15 minutes; version the URL when publishing a revised dictionary. <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-pronunciation#custom-lexicon">Lexicon rules and validation tool</a>.</p>
+                <h3 id="omni-parameters">Omni generation settings</h3>
+                <p>These go in the <code>parameters</code> attribute of <code>voice</code>, separated by semicolons. Use them only with the documented model.</p>
+                <div class="table-scroll">
+                    <table>
+                        <caption>Dragon HD Omni parameter reference</caption>
+                        <thead><tr><th scope="col">Parameter</th><th scope="col">Default</th><th scope="col">Range</th><th scope="col">Purpose</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>temperature</code></td><td>0.7</td><td>0.3-1.0</td><td>Generation variation; lower is more stable, not guaranteed identical.</td></tr>
+                            <tr><td><code>top_p</code></td><td>0.7</td><td>0.3-1.0</td><td>Filter candidate outputs for diversity. Microsoft recommends matching temperature.</td></tr>
+                            <tr><td><code>top_k</code></td><td>22</td><td>1-50</td><td>Limit the number of candidate outputs.</td></tr>
+                            <tr><td><code>cfg_scale</code></td><td>1.4</td><td>1.0-2.0</td><td>Context alignment and speed; not a portable substitute for <code>prosody rate</code>.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="source-line"><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/high-definition-voices#advanced-parameter-tuning-for-dragon-hd-omni">Official parameter ranges</a>. Other HD families have different settings. Square-bracket style markers such as <code>[excited]</code> are also model-specific syntax, not W3C SSML; unsupported voices may read them aloud.</p>
+                <h3 id="full-narration">A larger narration sample</h3>
+                <p>A short release walkthrough combining paragraph structure, abbreviation expansion, numbers, pauses, and bookmarks. Use standard JennyNeural. The <a href="#python-sample">SDK sample</a> saves its audio and marker timings.</p>
+                <article class="example" id="ex-narration" data-complete="true">
+                    <div class="example-heading"><h4>Release walkthrough</h4><a href="samples/narration.ssml" download>Download narration.ssml</a></div>
+                    <pre><code class="language-xml">&lt;speak version="1.0" xml:lang="en-US"
+       xmlns="http://www.w3.org/2001/10/synthesis"
+       xmlns:mstts="https://www.w3.org/2001/mstts"&gt;
+  &lt;voice name="en-US-JennyNeural"&gt;
+    &lt;bookmark mark="overview"/&gt;
+    &lt;p&gt;This release adds an offline export to the &lt;sub alias="software development kit"&gt;SDK&lt;/sub&gt;. Your existing configuration still works.&lt;/p&gt;
+    &lt;bookmark mark="instructions"/&gt;
+    &lt;p&gt;First, open settings.&lt;break time="400ms"/&gt;Then choose export. Keep the original file until you have checked the result.&lt;/p&gt;
+    &lt;p&gt;The verification code is &lt;say-as interpret-as="characters"&gt;2048&lt;/say-as&gt;. Enter it without spaces.&lt;/p&gt;
+    &lt;bookmark mark="summary"/&gt;
+    &lt;p&gt;&lt;prosody rate="-10%"&gt;Check the exported file before you close the application.&lt;/prosody&gt;&lt;/p&gt;
+  &lt;/voice&gt;
+&lt;/speak&gt;</code></pre>
+                </article>
+                <p class="small">Additional supplied material: <a href="azure_speech_ssml_reference.pdf" download>narration/acting reference PDF</a>, <a href="azure_speech_ssml_reference.md" download>Markdown source</a>, and <a href="sample.txt" download>original longer Omni sample</a>. These files are preserved as supplied, not revalidated by live synthesis. The original sample uses a different <code>mstts</code> namespace URI than this page's examples; check its XML and model support before importing. Current official documentation takes precedence if the supplementary material differs.</p>
+            </section>
+
+            <section id="workbench" aria-labelledby="workbench-title">
+                <h2 id="workbench-title"><a href="#workbench"><span class="section-number">05</span> Check &amp; share SSML</a></h2>
+                <p>This editor runs locally. It <strong>does not synthesize audio or contact Azure</strong>. Check the document, copy or download it, then paste/upload it into <a href="https://speech.microsoft.com/portal/audiocontentcreation">Audio Content Creation</a> or your Foundry project.</p>
+                <div class="editor-panel" data-enhance hidden>
+                    <label for="example-picker">Load an example <span class="small">(replaces editor contents)</span></label>
+                    <select id="example-picker"><option value="">Choose an example</option></select>
+                    <label for="ssml-input">Complete SSML document</label>
+                    <textarea id="ssml-input" rows="14" spellcheck="false" maxlength="20000" aria-describedby="editor-scope editor-count"></textarea>
+                    <p id="editor-count" class="small"></p>
+                    <div class="actions">
+                        <button type="button" id="check-xml">Check XML</button>
+                        <button type="button" id="copy-ssml">Copy SSML</button>
+                        <button type="button" id="download-ssml">Download .txt</button>
+                        <button type="button" id="share-ssml">Create share link</button>
+                    </div>
+                    <p id="editor-status" role="status" aria-live="polite"></p>
+                    <div id="validation-results" aria-live="polite"></div>
+                    <div id="share-panel" hidden>
+                        <label for="share-url">Share URL <span class="small">(copy manually if clipboard access is unavailable)</span></label>
+                        <input id="share-url" type="text" readonly>
+                    </div>
+                    <p id="editor-scope" class="small">Check XML tests well-formedness, the Azure document wrapper, and common HD incompatibilities. It is not a full SSML schema, pronunciation, style, region, or service validator. Editor limit: 20,000 characters; share-link limit: 6,000 UTF-8 bytes.</p>
+                    <p class="small"><strong>Share only public scripts.</strong> A share link contains readable script data in the URL fragment, not encrypted storage. Anyone with the link can recover it; browser history and clipboard can retain it. Nothing is uploaded by this page.</p>
+                </div>
+                <noscript><p class="note">JavaScript is disabled. All reference text and samples remain readable. Copy the starter document manually or download <a href="samples/narration.ssml">the complete narration sample</a>.</p></noscript>
+                <h3 id="sharing-foundry">Can a link preload Foundry?</h3>
+                <p><strong>No public, documented SSML-preload URL was found</strong> in the checked <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-audio-content-creation">Foundry / Speech Studio workflow</a>. This page's share link opens this editor, not an Azure project. Copy or upload the script after signing in; use your own project's portal URL only as a navigation link for collaborators who already have access.</p>
+                <p>Do not put resource keys in URLs, embed a portal session, or treat project links as permission grants. A static page cannot silently create a project or issue authorized, billable synthesis requests.</p>
+            </section>
+
+            <section id="integration" aria-labelledby="integration-title">
+                <h2 id="integration-title"><a href="#integration"><span class="section-number">06</span> Call Azure Speech</a></h2>
+                <p>Use the <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-sdk">Speech SDK</a> for synthesis and timing events. Choose a supported voice in the SSML itself. The SDK's plain-text method is not interchangeable with its SSML method.</p>
+                <div class="table-scroll">
+                    <table>
+                        <caption>SSML entry points</caption>
+                        <thead><tr><th scope="col">Client</th><th scope="col">Call</th><th scope="col">Use</th></tr></thead>
+                        <tbody>
+                            <tr><td>Python</td><td><code>speak_ssml_async(ssml).get()</code></td><td>Server or local script; complete sample below.</td></tr>
+                            <tr><td>C#</td><td><code>await SpeakSsmlAsync(ssml)</code></td><td>Server/desktop integrations and SDK events.</td></tr>
+                            <tr><td>JavaScript</td><td><code>speakSsmlAsync(ssml, onSuccess, onError)</code></td><td>Browser/Node SDK; use server-issued short-lived authorization, never a shipped resource key.</td></tr>
+                            <tr><td>REST</td><td><code>POST /cognitiveservices/v1</code></td><td>SSML body with <code>Content-Type: application/ssml+xml</code>; binary audio response. SDK is preferable when you need events.</td></tr>
+                            <tr><td>Batch synthesis</td><td><code>inputKind: "SSML"</code></td><td>Asynchronous long-form jobs, supported voices only. Submit, poll status, then download output.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h3 id="python-sample">Python: audio file + bookmark timings</h3>
+                <p>Download <a href="samples/synthesize.py" download>synthesize.py</a> and <a href="samples/narration.ssml" download>narration.ssml</a> into the same directory. Use Python 3.9+ with the Speech SDK's <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/quickstarts/setup-platform?tabs=windows%2Cubuntu%2Cdotnet%2Cjre%2Cpip">platform prerequisites</a>. Set <code>SPEECH_KEY</code> and <code>SPEECH_REGION</code> in your local environment; do not commit them.</p>
+                <pre><code>python -m pip install azure-cognitiveservices-speech
+python synthesize.py narration.ssml --output narration.wav</code></pre>
+                <pre><code class="language-python" id="python-code">import argparse
+import json
+import os
+from pathlib import Path
+import xml.etree.ElementTree as ET
+
+import azure.cognitiveservices.speech as speechsdk
+
+parser = argparse.ArgumentParser()
+parser.add_argument("script", type=Path)
+parser.add_argument("--output", type=Path, default=Path("narration.wav"))
+args = parser.parse_args()
+ssml = args.script.read_text(encoding="utf-8")
+if "&lt;!DOCTYPE" in ssml.upper() or "&lt;!ENTITY" in ssml.upper():
+    raise SystemExit("DTD and entity declarations are not allowed.")
+root = ET.fromstring(ssml)
+if root.tag != "{http://www.w3.org/2001/10/synthesis}speak":
+    raise SystemExit("Expected an SSML speak root.")
+
+config = speechsdk.SpeechConfig(
+    subscription=os.environ["SPEECH_KEY"],
+    region=os.environ["SPEECH_REGION"],
+)
+config.set_speech_synthesis_output_format(
+    speechsdk.SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm
+)
+audio = speechsdk.audio.AudioOutputConfig(filename=str(args.output))
+synth = speechsdk.SpeechSynthesizer(speech_config=config, audio_config=audio)
+markers = []
+synth.bookmark_reached.connect(lambda event: markers.append({
+    "mark": event.text,
+    "seconds": event.audio_offset / 10_000_000,
+}))
+result = synth.speak_ssml_async(ssml).get()
+if result.reason != speechsdk.ResultReason.SynthesizingAudioCompleted:
+    raise SystemExit(f"Synthesis failed: {result.cancellation_details}")
+args.output.with_suffix(".timing.json").write_text(
+    json.dumps(markers, indent=2), encoding="utf-8"
+)
+print(f"Saved {args.output} and bookmark timings.")</code></pre>
+                <p>The output is 24 kHz mono PCM WAV plus a <code>.timing.json</code> sidecar. SDK offsets are 100-nanosecond ticks: divide by 10,000,000 for seconds. Events can arrive ahead of playback; schedule against the audio player's clock. A voice without bookmark support will not produce these markers.</p>
+                <p class="note">This is a local/server learning sample, not a public synthesis endpoint. A deployed service also needs authentication, rate/length limits, allowlisted voices and asset URLs, cancellation handling, and bounded retries. Prefer <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-configure-azure-ad-auth">Microsoft Entra authentication</a> where supported. No Azure credentials are requested by this website.</p>
+                <h3 id="http-request">REST request shape</h3>
+                <pre><code>POST https://YOUR-RESOURCE.cognitiveservices.azure.com/cognitiveservices/v1
+Ocp-Apim-Subscription-Key: &lt;read from server environment&gt;
+Content-Type: application/ssml+xml
+X-Microsoft-OutputFormat: riff-24khz-16bit-mono-pcm
+User-Agent: your-application
+
+&lt;complete SSML document as UTF-8 request body&gt;</code></pre>
+                <p>Replace the host with your Speech resource's configured endpoint; use the <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech">REST reference</a> for regional/custom-domain and authentication requirements. Match the declared output format to the audio player and file extension.</p>
+                <h3 id="batch-input">Batch input shape</h3>
+                <pre><code class="language-json">{
+  "inputKind": "SSML",
+  "inputs": [
+    { "content": "&lt;complete escaped SSML document&gt;" }
+  ],
+  "properties": {
+    "outputFormat": "riff-24khz-16bit-mono-pcm"
+  }
+}</code></pre>
+                <p>This is a request-body shape, not runnable content. Serialize JSON with a library instead of hand-escaping XML strings. The <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/batch-synthesis">batch synthesis API</a> is generally available; HD voices are documented as real-time only. Do not assume any voice that works in an interactive playground works in batch.</p>
+            </section>
+
+            <section id="architecture" aria-labelledby="architecture-title">
+                <h2 id="architecture-title"><a href="#architecture"><span class="section-number">07</span> Application patterns</a></h2>
+                <p>These are implementation patterns to adapt, not a required Azure topology. <strong>Keep content separate from rendering:</strong> store text and intent, then render provider-specific SSML at the synthesis boundary.</p>
+                <h3 id="pattern-request">On-demand speech: changing text</h3>
+                <figure class="architecture">
+                    <div class="diagram-scroll">
+                        <svg viewBox="0 0 760 260" role="img" aria-labelledby="request-diagram-title request-diagram-desc">
+                            <title id="request-diagram-title">On-demand synthesis with a server-side credential boundary</title>
+                            <desc id="request-diagram-desc">A browser sends text and a preset ID to an application API. The server authenticates the request, renders and validates SSML, calls Azure Speech, and returns audio plus timing metadata. Resource credentials stay inside the server boundary.</desc>
+                            <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs>
+                            <rect class="boundary" x="266" y="12" width="230" height="234" rx="6"/>
+                            <text class="diagram-label" x="282" y="36">SERVER: credentials stay here</text>
+                            <rect class="node" x="12" y="66" width="172" height="94" rx="5"/>
+                            <text class="diagram-heading" x="28" y="91">Browser / mobile</text>
+                            <text x="28" y="115">Text + preset ID</text>
+                            <text x="28" y="138">Audio player clock</text>
+                            <rect class="node" x="282" y="66" width="198" height="94" rx="5"/>
+                            <text class="diagram-heading" x="298" y="91">Application API</text>
+                            <text x="298" y="115">Auth + limits + renderer</text>
+                            <text x="298" y="138">SSML capability checks</text>
+                            <rect class="node" x="578" y="66" width="170" height="94" rx="5"/>
+                            <text class="diagram-heading" x="594" y="91">Azure Speech</text>
+                            <text x="594" y="115">Voice + model</text>
+                            <text x="594" y="138">Synthesis + events</text>
+                            <path class="connector" d="M184 90H280" marker-end="url(#arrow)"/>
+                            <text class="edge-label" x="207" y="78">request</text>
+                            <path class="connector" d="M480 90H576" marker-end="url(#arrow)"/>
+                            <text class="edge-label" x="510" y="78">SSML</text>
+                            <path class="connector" d="M578 142H482" marker-end="url(#arrow)"/>
+                            <text class="edge-label" x="504" y="172">audio</text>
+                            <path class="connector" d="M282 142H186" marker-end="url(#arrow)"/>
+                            <text class="edge-label" x="195" y="172">audio + timing</text>
+                            <text class="diagram-label" x="282" y="215">Optional cache: script + voice</text>
+                            <text class="diagram-label" x="282" y="235">+ model + settings + format</text>
+                        </svg>
+                    </div>
+                    <figcaption>Use for notifications, personalized instructions, and read-aloud content. Send preset IDs rather than arbitrary voice/style/asset URLs. Cache only where the content's privacy and retention policy permits.</figcaption>
+                </figure>
+                <h3 id="pattern-publish">Pre-rendered audio: fixed content</h3>
+                <figure class="architecture">
+                    <ol class="flow" aria-label="Pre-rendered publishing pipeline">
+                        <li><strong>Versioned script</strong><span>Text, locale, lexicon</span></li>
+                        <li><strong>Render + audition</strong><span>SDK or supported batch voice</span></li>
+                        <li><strong>Publish assets</strong><span>Audio + timing manifest</span></li>
+                        <li><strong>Client playback</strong><span>Storage / CDN; no TTS key</span></li>
+                    </ol>
+                    <figcaption>Use for help prompts, lessons, and narrated documentation. Review the audio before publishing. A queue/worker handles long jobs; failed jobs do not block the reader's request.</figcaption>
+                </figure>
+                <p>Include the script, voice, locale, model version/name, generation settings, output format, and lexicon revision in a build manifest/cache key. Keep a last-known-good render. Model updates and sampling mean the same SSML is not a promise of byte-identical audio.</p>
+                <h3 id="pattern-agent">Foundry + an LLM: generated responses</h3>
+                <figure class="architecture">
+                    <ol class="flow" aria-label="LLM to speech pipeline">
+                        <li><strong>Foundry model</strong><span>Text or typed segments</span></li>
+                        <li><strong>Speech policy</strong><span>Escape, allowlist, normalize</span></li>
+                        <li><strong>SSML renderer</strong><span>Complete supported documents</span></li>
+                        <li><strong>Azure Speech</strong><span>Audio queue + cancellation</span></li>
+                    </ol>
+                    <figcaption>Use when you need deterministic pronunciation/timing controls around generated text. The LLM and speech service are separate contracts even when managed through Foundry.</figcaption>
+                </figure>
+                <p>Have the LLM return text or structured speech segments, not unrestricted SSML. Render SSML server-side: escape text, select allowlisted voices/styles, and check length and capabilities before calling Azure Speech. Send audio to the client; keep resource keys server-side.</p>
+                <pre><code class="language-json">{
+  "locale": "en-US",
+  "preset": "help-neutral",
+  "segments": [
+    { "text": "The export is ready.", "pauseAfterMs": 400 },
+    { "text": "Keep the original file." }
+  ]
+}</code></pre>
+                <p>The renderer resolves <code>help-neutral</code> to a configured standard neural voice, validates the pause range, and escapes each text segment. If the target model has no <code>break</code>, reject the request or explicitly select a different rendering policy; do not silently promise an equivalent effect.</p>
+                <p>Pre-render fixed prompts; synthesize changing text. Sentence-sized chunks reduce waiting, but <strong>each SSML request must be a complete document</strong> and may lose cross-sentence expressive context. Keep a bounded playback queue, cancel obsolete requests, and stop audio when the user interrupts. Do not split XML at a character count.</p>
+                <p class="source-line">For a managed, real-time conversational stack, evaluate <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/voice-live">Voice Live</a> separately. It handles a different end-to-end interaction contract; do not assume its session accepts arbitrary SSML documents. For an actual prototype, inspect <a href="https://github.com/Azure-Samples/Cognitive-Speech-TTS/tree/master/doctopodcast">Microsoft's document-to-podcast sample</a>; it demonstrates direct LLM-to-SSML generation, not the policy boundary recommended here.</p>
+                <h3 id="portable-design">When supporting multiple speech providers</h3>
+                <p>Define a small internal model such as text, pronunciation alias, pause, locale, and delivery preset. Implement one renderer and capability profile per provider/model. <code>mstts:express-as</code>, Alexa's <code>amazon:emotion</code>, and Google-specific elements are not equivalent. Make unsupported features explicit and test the rendered audio on every target.</p>
+            </section>
+
+            <section id="troubleshooting" aria-labelledby="troubleshooting-title">
+                <h2 id="troubleshooting-title"><a href="#troubleshooting"><span class="section-number">08</span> Troubleshooting</a></h2>
+                <div class="table-scroll">
+                    <table>
+                        <caption>Diagnose the symptom before adding more tags</caption>
+                        <thead><tr><th scope="col">Symptom</th><th scope="col">Check first</th><th scope="col">Next action</th></tr></thead>
+                        <tbody>
+                            <tr><td>XML error / HTTP 400</td><td>Unescaped text, namespaces, root/voice, malformed phonemes, unsupported elements.</td><td>Run <a href="#workbench">Check XML</a>, then retry the smallest complete document against the actual service.</td></tr>
+                            <tr><td>Tag has no audible effect</td><td>Exact voice family, supported style, and whether you called an SSML or plain-text method.</td><td>Compare tagged vs. plain versions using the same voice. A neutral fallback is not proof of support.</td></tr>
+                            <tr><td>Pause/rate control fails on Omni</td><td><code>break</code> / <code>prosody</code> are not supported.</td><td>Use a standard neural voice when explicit timing is required; use natural phrasing for Omni.</td></tr>
+                            <tr><td>Pronunciation remains wrong</td><td>Locale, acronym interpretation, phone set, case-sensitive lexicon match.</td><td>Try <code>sub</code> first; for a lexicon, check URL access and cache revision.</td></tr>
+                            <tr><td>Asset/lexicon cannot load</td><td>Service-side access, media format, expired SAS, and XML-escaped query parameters.</td><td>Provide a service-accessible, allowlisted URL and compatible file. A local file path is not a hosted asset.</td></tr>
+                            <tr><td>401 / 403</td><td>Resource host/region, credential type, token expiry, and permissions.</td><td>Follow the resource's authentication path; do not reuse a token across incompatible endpoints.</td></tr>
+                            <tr><td>429 / latency spikes</td><td>Request rate, voice capacity, concurrent work, and retry storms.</td><td>Bound concurrency, back off with jitter, honor retry guidance, and cache stable prompts when appropriate.</td></tr>
+                            <tr><td>Audio won't play</td><td>Output encoding, sample rate, container, MIME type, and extension.</td><td>Save WAV with a RIFF format or MP3 with an MP3 format; raw PCM is not a WAV file.</td></tr>
+                            <tr><td>Caption/highlight drift</td><td>SDK tick conversion and event time versus actual audio playback time.</td><td>Use <code>audio_offset / 10_000_000</code> seconds against the player's clock. Word text offsets may refer to the SSML source, not display text.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h3 id="audition">A small audio regression loop</h3>
+                <p>Keep a script containing names, dates, acronyms, a paragraph transition, and an ordinary sentence. Save a plain baseline, change <strong>one</strong> control, and audition both at the same playback level. Check pronunciation, pacing, intelligibility, and the actual timing metadata. Retain reviewed renders and the generation manifest.</p>
+                <p>Do not assert byte-for-byte equality for generative audio. Use structural tests for rendered XML and timing invariants, plus human listening for delivery. XML validity alone cannot prove acoustic quality.</p>
+                <p class="source-line">Operational references: <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-services-quotas-and-limits">quotas and limits</a>, <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-speech-synthesis#subscribe-to-synthesizer-events">synthesis events</a>, <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech">HTTP responses</a>.</p>
+            </section>
+
+            <section id="resources" aria-labelledby="resources-title">
+                <h2 id="resources-title"><a href="#resources"><span class="section-number">09</span> Tools &amp; further reading</a></h2>
+                <p>Selected for direct relevance, inspectable examples, and authoritative documentation, not star count alone. Repository activity and licenses were checked on the source date; maintenance can change. Sample-code licenses do not replace the Speech SDK's separate license or cloud service terms.</p>
+                <h3 id="github-tools">GitHub: useful starting points</h3>
+                <div class="table-scroll">
+                    <table class="resources">
+                        <caption>Projects to inspect before choosing a dependency</caption>
+                        <thead><tr><th scope="col">Project</th><th scope="col">Use it for</th><th scope="col">Scope / selection note</th></tr></thead>
+                        <tbody>
+                            <tr><td><a href="https://github.com/Azure-Samples/cognitive-services-speech-sdk">Azure Speech SDK samples</a><small>Microsoft samples; MIT<br>Updated Nov 2026</small></td><td>Working synthesis, SSML, bookmarks, word-boundary, and batch examples in several languages.</td><td><strong>Best first stop for Azure implementation.</strong> Start with the <a href="https://github.com/Azure-Samples/cognitive-services-speech-sdk/blob/master/samples/python/console/speech_synthesis_sample.py">Python synthesis examples</a> or <a href="https://github.com/Azure-Samples/cognitive-services-speech-sdk/tree/master/samples/batch-synthesis">batch samples</a>, not the entire repository.</td></tr>
+                            <tr><td><a href="https://github.com/microsoft/cognitive-services-speech-sdk-js">Speech SDK for JavaScript</a><small>Microsoft SDK; separate SDK terms<br>Updated Nov 2026</small></td><td>Browser/Node synthesis API, events, and implementation details.</td><td>Official client, not an SSML authoring UI. Use server-issued authorization for browser apps.</td></tr>
+                            <tr><td><a href="https://github.com/Azure-Samples/Cognitive-Speech-TTS/tree/master/CustomLexiconValidation">Custom Lexicon Validation</a><small>Microsoft TTS samples<br>Parent repo updated Nov 2026</small></td><td>Check pronunciation dictionaries before Azure fetches them.</td><td>Linked from the official pronunciation guide. Validates a lexicon, not all SSML or every model's support. Follow the parent repo's license files.</td></tr>
+                            <tr><td><a href="https://github.com/speechmarkdown/speechmarkdown-js">Speech Markdown JS</a><small>Community; MIT<br>Updated Mar 2026</small></td><td>Author readable speech markup and render to provider-specific SSML, including Azure.</td><td>Useful authoring abstraction. For Azure, explicitly enable <code>escapeXmlSymbols</code> (default is false), provide a complete Azure wrapper, and validate output for the selected voice.</td></tr>
+                            <tr><td><a href="https://github.com/speechmarkdown/speechmarkdown-vscode">Speech Markdown VS Code</a><small>Community; MIT<br>Updated Oct 2026</small></td><td>Syntax highlighting, snippets, and hover help for Speech Markdown.</td><td>Editor support for the authoring format, not live Azure capability validation.</td></tr>
+                            <tr><td><a href="https://github.com/pykeio/ssml">ssml-rs</a><small>Community; Apache-2.0<br>Updated May 2026</small></td><td>Typed SSML construction/serialization in Rust with provider flavors.</td><td>Small focused library, not an official Azure SDK. Confirm that serialization and extensions meet your target profile.</td></tr>
+                            <tr><td><a href="https://github.com/remsky/Kokoro-FastAPI">Kokoro-FastAPI</a><small>Community; Apache-2.0<br>Updated Nov 2026</small></td><td>Self-hosted TTS experiments, caption timing, and an inspectable SSML translation layer.</td><td>Limited, experimental SSML subset; not Azure voices or full SSML semantics. The README requires <code>ssml: true</code> and <code>allow_voice_tags: true</code> for its speech route. Some tags are stripped.</td></tr>
+                            <tr><td><a href="https://github.com/Azure-Samples/Cognitive-Speech-TTS/tree/master/doctopodcast">Document-to-podcast sample</a><small>Microsoft prototype<br>Parent repo updated Nov 2026</small></td><td>See a PDF/document-to-LLM-to-SSML-to-audio pipeline.</td><td>A concrete application example, not a hardened production design. Add validation and a policy renderer before using generated SSML in a public app.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="note"><strong>Not an arbitrary SSML runner:</strong> <a href="https://github.com/rany2/edge-tts#custom-ssml">edge-tts</a> explicitly removed custom SSML support because Edge's endpoint permits only a restricted voice/prosody structure. It can be useful for other TTS tasks, but do not use it to verify these Azure examples.</p>
+                <h3 id="products">Tools and products that accept SSML</h3>
+                <div class="table-scroll">
+                    <table>
+                        <caption>Choose the tool, then its voice/model profile</caption>
+                        <thead><tr><th scope="col">Tool / product</th><th scope="col">Where it helps</th><th scope="col">Compatibility boundary</th></tr></thead>
+                        <tbody>
+                            <tr><td><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-audio-content-creation">Azure Audio Content Creation</a></td><td>Tune scripts, audition, and export narration without writing code.</td><td>Foundry or Speech Studio; resource access and billable synthesis required. Use the exact voice model's SSML support.</td></tr>
+                            <tr><td><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/spx-basics">Azure Speech CLI</a></td><td>Command-line speech experiments and automation. The SSML entry point is <code>spx synthesize --ssml</code>.</td><td>Install/configure separately; check CLI argument/file syntax and resource credentials in its docs.</td></tr>
+                            <tr><td><a href="https://docs.aws.amazon.com/polly/latest/dg/supportedtags.html">Amazon Polly</a></td><td>Cloud narration and pronunciation controls in AWS applications.</td><td>Standard, neural, long-form, and generative voices have different tag support. <code>mstts</code> extensions do not carry over.</td></tr>
+                            <tr><td><a href="https://docs.cloud.google.com/text-to-speech/docs/ssml">Google Cloud Text-to-Speech</a></td><td>SSML synthesis and examples with audible comparisons.</td><td>Supported subset varies by voice type. Send the SSML in the API's <code>input.ssml</code> field, not plain-text input.</td></tr>
+                            <tr><td><a href="https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html">Alexa Skills Kit</a></td><td>Spoken responses, pauses, pronunciation, and Alexa-specific emotion/audio effects.</td><td>A voice-app platform, not a general Azure engine. JSON responses use <code>outputSpeech.type = "SSML"</code> and <code>outputSpeech.ssml</code>.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h3 id="primary-sources">Primary references</h3>
+                <dl class="reference-list">
+                    <dt><a href="https://www.w3.org/TR/2004/REC-speech-synthesis-20040907/">W3C SSML 1.0</a> / <a href="https://www.w3.org/TR/speech-synthesis11/">1.1</a></dt><dd>Normative language definitions. Use to understand semantics; provider documentation decides what actually works in a service.</dd>
+                    <dt><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-structure">Azure document structure and events</a></dt><dd>Root requirements, supported nesting, breaks, silence, and bookmarks.</dd>
+                    <dt><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-voice">Azure voice and sound</a></dt><dd>Styles, roles, emphasis, prosody, audio, and multi-talker syntax.</dd>
+                    <dt><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-pronunciation">Azure pronunciation</a></dt><dd>Phonemes, lexicons, say-as interpretations, and specialized reading controls.</dd>
+                    <dt><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/high-definition-voices">HD voice model reference</a></dt><dd>HD/Omni/Flash differences, generation settings, and supported/unsupported tags. Read alongside the voice guide when they disagree.</dd>
+                    <dt><a href="https://www.w3.org/TR/pronunciation-lexicon/">W3C Pronunciation Lexicon Specification</a></dt><dd>Separate dictionary format for reusable pronunciations.</dd>
+                </dl>
+                <h3 id="further-reading">Tutorials, design reading &amp; discussions</h3>
+                <dl class="reference-list">
+                    <dt><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-speech-synthesis">Azure synthesis how-to</a></dt><dd>Implementation guidance: outputs, events, SSML calls, and cancellation. Read this after the first successful local sample.</dd>
+                    <dt><a href="https://docs.cloud.google.com/text-to-speech/docs/ssml-tutorial">Google's SSML tutorial</a></dt><dd>A second provider's worked API examples. Useful for comparing request shape and portability, not validating Azure extensions.</dd>
+                    <dt><a href="https://www.oreilly.com/library/view/designing-voice-user/9781491955406/index.html">Designing Voice User Interfaces</a>, Cathy Pearl (2016)</dt><dd>A book about prompts, dialogue, confirmations, and testing. Broader voice UX guidance, not a current Azure SSML tag reference; publisher access may require a subscription.</dd>
+                    <dt><a href="https://news.microsoft.com/source/features/innovation/custom-neural-voice-ga/">Microsoft's Custom Neural Voice customer story</a> (2021)</dt><dd>Real deployment context: character voices and a branded conversational assistant. Historical product story, not proof that those applications used specific SSML controls.</dd>
+                    <dt><a href="https://learn.microsoft.com/en-us/answers/tags/55/azure-speech/">Microsoft Q&amp;A: Azure Speech</a></dt><dd>Service-specific questions and troubleshooting discussions. Check dates, exact models, and whether a response is official.</dd>
+                    <dt><a href="https://github.com/Azure-Samples/cognitive-services-speech-sdk/issues">Speech SDK sample issues</a> / <a href="https://github.com/remsky/Kokoro-FastAPI/discussions">Kokoro-FastAPI discussions</a></dt><dd>Implementation reports and community experiments. Useful evidence of constraints, not a substitute for supported-service documentation.</dd>
+                </dl>
+            </section>
+            <footer class="page-footer">
+                <p>Reference text and tools are available offline; linked services require a connection. No analytics, remote fonts, or automatic synthesis. <a href="readme.md">Project README</a>.</p>
+            </footer>
+        </main>
+    </div>
+</body>
+</html>
