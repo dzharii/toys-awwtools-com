@@ -15,12 +15,23 @@ assets are loaded from another project, CDN, npm, or an external service.
 - Local XML checks, complete-document copying, UTF-8 downloads, and share links.
 - Azure Speech SDK integration and illustrated application design patterns.
 - Curated official documentation, GitHub projects, products, and design reading.
+- AI narration direction, faithful versus creative text handling, and reusable
+  generation/refinement prompts.
+- A recorded Foundry narration with a native video player, visible transcript,
+  and the supplied PowerShell/FFmpeg slideshow command.
 
 The page does not synthesize audio, request credentials, or send scripts to a
 service. Use Foundry or Speech Studio to audition examples with your own
 authorized resource; service usage can incur charges. Share links contain the
 script in the URL fragment and should contain only public text. Local/file URLs
 are not accessible to other readers. XML checks are not full service validation.
+
+The recorded example uses the supplied `slideshow_720p_soft_wave.mp4` unchanged.
+Its poster is a local frame extracted from that video. The player uses
+`preload="none"` and does not autoplay. As the final section enters view, a
+scroll-linked palette fades the page toward a black theater background while
+keeping text readable. Scrolling back restores the initial light/dark preference.
+Reduced-motion users keep the static theme; print/PDF output remains light.
 
 The Python learning sample in `samples/` requires the Azure Speech SDK and
 `SPEECH_KEY` / `SPEECH_REGION` environment variables. It saves a WAV file and
@@ -31,7 +42,8 @@ on the reference page.
 
 `azure_speech_ssml_reference.md`, `azure_speech_ssml_reference.pdf`, and
 `sample.txt` are preserved as supplied and linked as supplementary narration
-material. `ssml-reference.pdf` is a printable snapshot of the new page, separate
+material. The final section also reproduces `sample.txt` as a readable transcript.
+`ssml-reference.pdf` is a printable snapshot of the new page, separate
 from the supplied narration PDF. Regenerate the snapshot using the page's print
 styles when the reference changes. Current official documentation takes precedence
 over supplementary material if capability descriptions differ.

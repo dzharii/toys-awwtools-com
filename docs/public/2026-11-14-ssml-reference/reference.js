@@ -269,12 +269,12 @@
     const search = document.querySelector("#reference-search");
     const searchResults = document.querySelector("#search-results");
     const searchStatus = document.querySelector("#search-status");
-    const searchEntries = [...document.querySelectorAll("main h2, main h3, .example h4")].map(heading => {
+    const searchEntries = [...document.querySelectorAll("main h2, main h3, main h4, main details > summary")].map(heading => {
         const section = heading.closest("section");
         const article = heading.closest(".example");
         const id = article?.id || (heading.tagName === "H2" ? section.id : heading.id);
         const text = article?.textContent || [heading.textContent, heading.nextElementSibling?.textContent || ""].join(" ");
-        return { id, title: heading.textContent.replace(/^\d+\s*/, "").trim(), text: text.toLowerCase(), section: section.querySelector("h2").textContent.replace(/^\d+\s*/, "").trim() };
+        return { id, title: heading.textContent.replace(/^\d+\.?\s*/, "").trim(), text: text.toLowerCase(), section: section.querySelector("h2").textContent.replace(/^\d+\s*/, "").trim() };
     }).filter(entry => entry.id);
     // Table rows need their own targets so tools and controls can be found without filtering the page.
     let rowIndex = 0;
@@ -322,11 +322,160 @@
         sections.forEach(section => observer.observe(section));
     }
 
-    for (const block of document.querySelectorAll("pre > code")) {
+    for (const block of document.querySelectorAll("pre > code:not(.language-text)")) {
         block.classList.add("reference-code");
     }
     if (window.microlight) window.microlight.reset("reference-code");
 
+    function setupScrollTheater() {
+        const section = document.querySelector("#recorded-example");
+        if (!section) return;
+        const root = document.documentElement;
+        const command = document.querySelector("#slideshow-command");
+        const commandCode = document.querySelector("#ffmpeg-command");
+        const darkPreference = matchMedia("(prefers-color-scheme: dark)");
+        const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+        const printMedia = matchMedia("print");
+        const theaterColors = {
+            bg: "#000000", surface: "#0d1117", text: "#e1e8ef",
+            muted: "#a8b6c4", line: "#374758", accent: "#85c3fb",
+            "accent-soft": "#142638", code: "#badcfa", string: "#ecafd0",
+            warning: "#efc17a", error: "#ffa0a0"
+        };
+        const names = Object.keys(theaterColors);
+        const foregrounds = ["text", "muted", "accent", "code", "string", "warning", "error"];
+        let frame = 0;
+        let lastProgress = "";
+        let commandBeforePrint = null;
+        let commandTokens = null;
+
+        function rgb(hex) {
+            const value = hex.trim().slice(1);
+            const expanded = value.length === 3 ? [...value].map(char => char + char).join("") : value;
+            return [0, 2, 4].map(index => parseInt(expanded.slice(index, index + 2), 16));
+        }
+
+        function mix(from, to, amount) {
+            return from.map((channel, index) => Math.round(channel + (to[index] - channel) * amount));
+        }
+
+        function luminance(color) {
+            const linear = color.map(channel => {
+                const value = channel / 255;
+                return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+            });
+            return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+        }
+
+        function contrast(color, background) {
+            const a = luminance(color);
+            const b = luminance(background);
+            return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+        }
+
+        function minimumContrast(color, backgrounds) {
+            return Math.min(...backgrounds.map(background => contrast(color, background)));
+        }
+
+        function readableColor(wanted, endpoint, backgrounds) {
+            if (minimumContrast(wanted, backgrounds) >= 4.5) return wanted;
+            let low = 0;
+            let high = 1;
+            for (let step = 0; step < 12; step++) {
+                const middle = (low + high) / 2;
+                if (minimumContrast(mix(wanted, endpoint, middle), backgrounds) >= 4.5) high = middle;
+                else low = middle;
+            }
+            return mix(wanted, endpoint, high);
+        }
+
+        const target = Object.fromEntries(names.map(name => [name, rgb(theaterColors[name])]));
+        function readBasePalette() {
+            const styles = getComputedStyle(root);
+            return Object.fromEntries(names.map(name => [name, rgb(styles.getPropertyValue(`--${name}`))]));
+        }
+        let base = readBasePalette();
+
+        function resetTheme() {
+            for (const name of names) root.style.removeProperty(`--${name}`);
+            root.style.removeProperty("color-scheme");
+            delete root.dataset.theaterProgress;
+            lastProgress = "";
+        }
+
+        function paintTheme() {
+            frame = 0;
+            if (reducedMotion.matches || printMedia.matches) { resetTheme(); return; }
+            const top = section.getBoundingClientRect().top + window.scrollY;
+            const start = Math.max(0, top - window.innerHeight * 0.8);
+            const end = Math.max(start + 1, Math.min(top, root.scrollHeight - window.innerHeight));
+            const progress = Math.max(0, Math.min(1, (window.scrollY - start) / (end - start)));
+            if (progress === 0) { resetTheme(); return; }
+            const key = progress.toFixed(4);
+            if (key === lastProgress) return;
+            lastProgress = key;
+            const eased = progress * progress * (3 - 2 * progress);
+            const palette = Object.fromEntries(names.map(name => [name, mix(base[name], target[name], eased)]));
+            const black = [0, 0, 0];
+            const white = [255, 255, 255];
+            let backgrounds = [palette.bg, palette.surface, palette["accent-soft"]];
+
+            // Directly blending dark and light text would erase contrast midway.
+            // Use readable foregrounds, merging surfaces only in the narrow crossover band.
+            if (Math.max(minimumContrast(black, backgrounds), minimumContrast(white, backgrounds)) < 4.5) {
+                palette.surface = palette.bg;
+                palette["accent-soft"] = palette.bg;
+                backgrounds = [palette.bg];
+            }
+            const endpoint = minimumContrast(black, backgrounds) >= minimumContrast(white, backgrounds) ? black : white;
+            for (const name of foregrounds) palette[name] = readableColor(palette[name], endpoint, backgrounds);
+            for (const name of names) root.style.setProperty(`--${name}`, `rgb(${palette[name].join(", ")})`);
+            root.style.setProperty("color-scheme", endpoint === white ? "dark" : "light");
+            root.dataset.theaterProgress = key;
+        }
+
+        function scheduleTheme() {
+            if (!frame) frame = requestAnimationFrame(paintTheme);
+        }
+
+        function refreshBase() {
+            resetTheme();
+            base = readBasePalette();
+            scheduleTheme();
+        }
+
+        function enterPrint() {
+            if (commandBeforePrint === null) commandBeforePrint = command.open;
+            command.open = true;
+            // Print plain code so copying the PDF preserves command whitespace.
+            if (commandTokens === null) {
+                commandTokens = [...commandCode.childNodes];
+                commandCode.replaceChildren(document.createTextNode(commandCode.textContent));
+            }
+            resetTheme();
+        }
+
+        function leavePrint() {
+            if (commandBeforePrint !== null) command.open = commandBeforePrint;
+            commandBeforePrint = null;
+            if (commandTokens !== null) commandCode.replaceChildren(...commandTokens);
+            commandTokens = null;
+            refreshBase();
+        }
+
+        window.addEventListener("scroll", scheduleTheme, { passive: true });
+        window.addEventListener("resize", scheduleTheme);
+        darkPreference.addEventListener("change", refreshBase);
+        reducedMotion.addEventListener("change", refreshBase);
+        printMedia.addEventListener("change", () => printMedia.matches ? enterPrint() : leavePrint());
+        window.addEventListener("beforeprint", enterPrint);
+        window.addEventListener("afterprint", leavePrint);
+        if ("ResizeObserver" in window) new ResizeObserver(scheduleTheme).observe(section);
+        if (printMedia.matches) enterPrint();
+        scheduleTheme();
+    }
+
+    setupScrollTheater();
     document.querySelector("#print-reference").addEventListener("click", () => window.print());
     document.querySelectorAll("[data-enhance]").forEach(element => { element.hidden = false; });
     loadExample("starter", false);

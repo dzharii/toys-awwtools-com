@@ -36,6 +36,8 @@
                     <li><a href="#architecture">Application patterns</a></li>
                     <li><a href="#troubleshooting">Troubleshooting</a></li>
                     <li><a href="#resources">Tools &amp; further reading</a></li>
+                    <li><a href="#directing-narration">Directing AI narration</a></li>
+                    <li><a href="#recorded-example">Recorded slideshow example</a></li>
                 </ol>
             </nav>
             <div class="sidebar-links">
@@ -578,6 +580,258 @@ User-Agent: your-application
                     <dt><a href="https://learn.microsoft.com/en-us/answers/tags/55/azure-speech/">Microsoft Q&amp;A: Azure Speech</a></dt><dd>Service-specific questions and troubleshooting discussions. Check dates, exact models, and whether a response is official.</dd>
                     <dt><a href="https://github.com/Azure-Samples/cognitive-services-speech-sdk/issues">Speech SDK sample issues</a> / <a href="https://github.com/remsky/Kokoro-FastAPI/discussions">Kokoro-FastAPI discussions</a></dt><dd>Implementation reports and community experiments. Useful evidence of constraints, not a substitute for supported-service documentation.</dd>
                 </dl>
+            </section>
+            <section id="directing-narration" class="narration-guidance" aria-labelledby="directing-narration-title">
+                <h2 id="directing-narration-title"><a href="#directing-narration"><span class="section-number">10</span> Directing AI Narration with SSML</a></h2>
+
+                <h3 id="narration-objective">1. Understand the Objective</h3>
+                <p>Effective AI narration requires more than converting written text into speech. The goal is to create a convincing vocal performance that reflects the text's meaning, rhetorical structure, and emotional progression.</p>
+                <p><strong>Treat the text as a script and the voice model as an actor.</strong> Direct the performance according to the material rather than applying emotions indiscriminately.</p>
+                <p>Speech Synthesis Markup Language (SSML) provides controls for voice selection, pronunciation, structure, and expressive delivery. Combined with AI-assisted text analysis, it allows us to guide how a passage should sound without manually directing every sentence.</p>
+                <p>The guiding principle is simple:</p>
+                <p><strong>Use the minimum amount of explicit direction needed to achieve the intended performance.</strong></p>
+                <p>A sophisticated AI model can interpret sentiment, recognize rhetorical transitions, and select appropriate expressions. The prompt should communicate the desired result and necessary constraints, leaving individual performance decisions to the model.</p>
+
+                <h3 id="narration-performance">2. Define the Performance</h3>
+                <p>Before generating SSML, establish the intended narration style.</p>
+                <p>The AI should consider the source's rhetorical purpose, implied emotions, intensity, and important transitions. This analysis does not need to appear in the final output; it informs the model's decisions about expressive markup.</p>
+                <h4 id="narration-character">Describe the character, not individual emotions</h4>
+                <p>A coherent character description is generally more effective than assigning emotional styles to individual sentences.</p>
+                <p>For example:</p>
+                <blockquote><p>Narrate this fictional letter as an exhausted administrator attempting to remain professional while occasionally revealing frustration and dry sarcasm. Keep the introduction formal, exaggerate selected complaints, and return to a composed tone for the conclusion. The humor should emerge naturally from contrasts in delivery, without continuous sarcasm or excessive theatricality.</p></blockquote>
+                <p>This direction establishes the narrator's character, attitude, and emotional trajectory without prescribing how every sentence should be performed.</p>
+                <p>The same approach applies to other styles, including documentary narration, reflective storytelling, dramatic speeches, and conversational essays.</p>
+                <h4 id="narration-contrast">Preserve emotional contrast</h4>
+                <p>Neutral delivery should remain the baseline. Expressive changes are most effective when they highlight meaningful transitions or important statements.</p>
+                <p>For example, a sarcastic conclusion may be more convincing when preceded by a neutral explanation. A determined statement may carry greater weight after a reflective passage.</p>
+                <p><strong>Amplify emotions supported by the text rather than imposing unrelated ones</strong>, unless the intended performance explicitly calls for creative reinterpretation.</p>
+                <h4 id="narration-text-handling">Decide whether rewriting is permitted</h4>
+                <p>There are two distinct modes of text processing.</p>
+                <p><strong>Faithful narration:</strong> Preserve the original wording and sentence order. Add only SSML markup, appropriate structural boundaries, and necessary pronunciation adjustments.</p>
+                <p><strong>Creative adaptation:</strong> Rewrite the text according to a specified artistic direction, then generate SSML for the revised version.</p>
+                <p>The mode should be explicit. Requesting a sarcastic or dramatic performance does not automatically authorize rewriting the source.</p>
+
+                <h3 id="narration-compatible-ssml">3. Generate Model-Compatible SSML</h3>
+                <p>Select a voice whose characteristics suit the intended narrator, then generate markup compatible with its synthesis model.</p>
+                <p>For a single-speaker performance, prefer one voice unless additional voices serve a clear narrative purpose.</p>
+                <p>Microsoft Azure's Dragon HD Omni model supports expressive narration through the <code>mstts:express-as</code> extension. It can apply styles such as <code>reflective</code>, <code>frustrated</code>, <code>sarcastic</code>, and <code>determined</code>.</p>
+                <p>Other Azure voice models may support different SSML elements. The AI must respect the capabilities of the selected model rather than assume that all SSML tags are universally available.</p>
+                <article class="example" id="ex-directed-narration" data-complete="true">
+                    <div class="example-heading"><h4>Example: From plain text to expressive narration</h4></div>
+                    <p>Consider a short passage from a fictional open letter:</p>
+                    <blockquote><p>We were promised a simpler approval process. Instead, every request now requires three additional reviews. Apparently, this is what progress looks like.</p></blockquote>
+                    <p>The passage begins neutrally, introduces frustration, and concludes with implied sarcasm.</p>
+                    <p>An expressive SSML version could be:</p>
+                    <pre><code class="language-xml">&lt;speak version="1.0"
+       xmlns="http://www.w3.org/2001/10/synthesis"
+       xmlns:mstts="http://www.w3.org/2001/mstts"
+       xml:lang="en-US"&gt;
+
+  &lt;voice name="en-US-Andrew:DragonHDOmniLatestNeural"&gt;
+
+    &lt;p&gt;We were promised a simpler approval process. &lt;mstts:express-as style="frustrated"&gt;Instead, every request now requires three additional reviews.&lt;/mstts:express-as&gt; &lt;mstts:express-as style="sarcastic"&gt;Apparently, this is what progress looks like.&lt;/mstts:express-as&gt;&lt;/p&gt;
+
+  &lt;/voice&gt;
+
+&lt;/speak&gt;</code></pre>
+                    <p>The opening uses the voice's natural delivery. The second sentence introduces frustration, while the final sentence shifts toward sarcasm.</p>
+                    <p>All three sentences remain within one <code>&lt;p&gt;</code> element, maintaining continuity without unnecessary paragraph pauses.</p>
+                    <p>The model determines the specific acoustic realization of each style. SSML provides performance direction, not a guarantee of an exact emotional effect.</p>
+                </article>
+                <h4 id="narration-intentional-markup">Keep the markup intentional</h4>
+                <p>Use expressive tags only where they improve the narration. Avoid assigning a different emotion to every sentence or introducing abrupt changes without a rhetorical purpose.</p>
+                <p>Preserve natural continuity by keeping related sentences within the same paragraph. Use <code>&lt;p&gt;</code> boundaries for meaningful transitions rather than routine sentence separation.</p>
+                <p>For Foundry workflows that produce unwanted pauses from source line breaks, keep each spoken paragraph on a single physical line.</p>
+                <p>Do not use elements unsupported by the selected model. For example, Dragon HD Omni does not support conventional <code>&lt;break&gt;</code>, <code>&lt;prosody&gt;</code>, or <code>&lt;emphasis&gt;</code> controls.</p>
+
+                <h3 id="narration-ai-prompt">4. Prompt AI to Generate the Narration</h3>
+                <p>A capable AI model can analyze the text, plan the performance, generate SSML, and validate its output in a single request.</p>
+                <p>Separate analysis and planning prompts are generally unnecessary unless the performance requires explicit review or approval before generation.</p>
+                <p>The following reusable prompt communicates the essential requirements without micromanaging individual decisions.</p>
+                <h4 id="narration-recommended-prompt">Recommended AI prompt</h4>
+                <pre><code class="language-text" id="narration-prompt">Convert the following text into expressive SSML for Microsoft Azure Speech.
+
+Voice: [voice identifier]
+Model: [synthesis model]
+Performance direction: [describe the narrator, character, tone, and intended emotional effect]
+Text handling: [preserve original wording / creatively adapt]
+
+Analyze the text's rhetorical structure, implied emotions, and important transitions.
+
+Direct the performance naturally, using supported expressive styles only where they meaningfully improve the narration. Preserve a neutral baseline, emotional continuity, and appropriate contrast. Avoid excessive or abrupt style changes.
+
+Generate complete, model-compatible SSML. Keep related sentences together and avoid unnecessary pauses or paragraph boundaries. For Foundry workflows sensitive to source line breaks, keep each spoken paragraph on one physical line.
+
+In faithful mode, preserve every spoken word and its order. In adaptation mode, follow the specified creative direction.
+
+Verify XML correctness, compatibility, content completeness, and appropriate markup before responding.
+
+Return the complete SSML only.
+
+Source text:
+[paste text]</code></pre>
+                <h4 id="narration-customizing-direction">Customizing the performance direction</h4>
+                <p>The most important creative input is the <strong>Performance direction</strong> field. It establishes the narrator's character and the intended listening experience.</p>
+                <p>For documentary narration:</p>
+                <blockquote><p>A composed, credible narrator explaining complex information with clarity and restraint. Maintain a natural conversational rhythm and emphasize only important conclusions.</p></blockquote>
+                <p>For reflective storytelling:</p>
+                <blockquote><p>A thoughtful narrator gradually developing an argument. Use measured delivery, subtle emotional changes, and a stronger sense of conviction toward the conclusion.</p></blockquote>
+                <p>For satirical narration:</p>
+                <blockquote><p>An overly earnest speaker attempting to maintain professional composure while occasionally revealing exaggerated frustration, disbelief, and dry sarcasm. Use emotional contrast to create humor without making every sentence theatrical.</p></blockquote>
+                <p>For dramatic narration:</p>
+                <blockquote><p>A compelling storyteller whose emotional delivery follows the narrative tension. Build intensity gradually, reserve stronger expression for pivotal moments, and maintain continuity between passages.</p></blockquote>
+                <p>These descriptions communicate the desired result while allowing the AI to choose appropriate SSML styles and their placement.</p>
+                <p>Additional instructions should be introduced only when they address a specific requirement or problem.</p>
+
+                <h3 id="narration-validation">5. Validate and Refine the Result</h3>
+                <p>SSML describes an intended performance. The synthesized recording determines whether that performance is successful.</p>
+                <p>Validation therefore has two stages.</p>
+                <h4 id="narration-technical-validation">Technical validation</h4>
+                <p>Before returning the final script, the AI should verify that:</p>
+                <ul class="compact-list">
+                    <li>The XML is well-formed, with valid nesting, namespaces, and character escaping.</li>
+                    <li>Every SSML element is supported by the selected model.</li>
+                    <li>The complete source text is preserved when faithful narration is required.</li>
+                    <li>Expressive markup is selective and structurally appropriate.</li>
+                    <li>Paragraph boundaries do not introduce unnecessary pauses.</li>
+                </ul>
+                <p>These checks should be part of the generation process, not a separate prompt unless additional review is requested.</p>
+                <h4 id="narration-audio-evaluation">Audio evaluation</h4>
+                <p>After synthesis, listen for natural pacing, emotional continuity, pronunciation, rhetorical clarity, and overall credibility.</p>
+                <p>For satire or comedy, also evaluate whether the emotional contrasts support the intended humor.</p>
+                <p>If the audio sounds exaggerated, simplify the markup before adding more instructions. If an emotional transition is ineffective, refine the relevant passage rather than regenerating the entire performance with additional effects.</p>
+                <p>Start with the synthesis model's default parameters. Adjust generation settings only after evaluating the initial recording, and compare changes using the same text and voice.</p>
+                <h4 id="narration-refinement-prompt">Refinement prompt</h4>
+                <p>When the initial recording reveals a problem, describe the specific issue.</p>
+                <p>For example:</p>
+                <blockquote><p>The narration sounds overly theatrical during the opening paragraphs, and the transitions between emotional styles are abrupt. Reduce expressive markup in the introduction, preserve the stronger sarcasm near the conclusion, and keep the overall delivery natural. Return the complete revised SSML without changing the spoken text.</p></blockquote>
+                <p>Specific feedback is more useful than requesting that the model generally "make it better."</p>
+
+                <h3 id="narration-principles">Final Principles</h3>
+                <p>Effective SSML generation is a process of <strong>interpretation, direction, and refinement</strong>.</p>
+                <p>A capable AI model does not need detailed instructions for recognizing every emotion or choosing every expressive tag. It needs a clear understanding of the intended performance, the permitted changes to the source, and the technical capabilities of the selected synthesis model.</p>
+                <p>Good prompting establishes these boundaries and allows the model to exercise judgment within them.</p>
+                <p>Good narration preserves a coherent character, uses emotional contrast deliberately, and avoids unnecessary effects.</p>
+                <p><strong>The best SSML is not the script with the most expressive tags. It is the script in which every tag serves a meaningful purpose.</strong></p>
+                <h4 id="narration-references">Technical References</h4>
+                <p><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup">Microsoft Azure: Speech Synthesis Markup Language</a></p>
+                <p><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/high-definition-voices">Microsoft Azure: High-Definition Voices</a></p>
+                <p><a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup-voice">Microsoft Azure: SSML Voice and Speaking Styles</a></p>
+            </section>
+            <section id="recorded-example" class="recorded-example" aria-labelledby="recorded-example-title">
+                <h2 id="recorded-example-title"><a href="#recorded-example"><span class="section-number">11</span> Recorded example: SSML to a narrated slideshow</a></h2>
+                <p>This fictional, satirical letter is a complete narration example. The supplied <a href="sample.txt" download>SSML script</a> was synthesized in Azure AI Foundry and saved as an MP3. The video below combines that recording with a slideshow using FFmpeg. It is a saved result, not a live synthesis request.</p>
+                <figure class="recording">
+                    <video id="narration-video" controls playsinline preload="none" poster="slideshow-poster.jpg" width="1280" height="720" aria-label="Recorded narration of the fictional Imperial workers' letter" aria-describedby="recording-caption recorded-transcript-title">
+                        <source src="slideshow_720p_soft_wave.mp4" type="video/mp4">
+                        Your browser cannot play this video. <a href="slideshow_720p_soft_wave.mp4" download>Download the recorded slideshow</a>.
+                    </video>
+                    <figcaption id="recording-caption">Press Play to hear the Foundry export. Listen for the contrast between formal delivery, frustration, and dry sarcasm. The visible transcript below contains the spoken wording; it is not a time-synchronized caption track.</figcaption>
+                </figure>
+                <p class="recording-links"><a href="slideshow_720p_soft_wave.mp4" download>Download video (MP4, 21.3 MiB)</a> | <a href="sample.txt" download>Download original SSML</a></p>
+                <p class="small">Duration: 5 min 35.6 sec. Video: H.264, 1280x720 at 30 fps. Audio: the exported MP3, 48 kHz mono.</p>
+                <h3 id="recorded-synthesis">How the narration was directed</h3>
+                <p><code>sample.txt</code> selects <code>en-US-Andrew:DragonHDOmniLatestNeural</code> with <code>temperature=0.8;top_p=0.8;top_k=26;cfg_scale=1.4</code>. Paragraphs organize the letter; <code>mstts:express-as</code> marks selected spans as <code>serious</code>, <code>frustrated</code>, <code>sarcastic</code>, and other supported styles. XML comments describe the performance for the editor but are not spoken.</p>
+                <p>The script's direction is an exhausted Imperial employee trying to remain professional. Neutral passages provide contrast for stronger complaints and sarcastic conclusions. This recording demonstrates one generated performance; rendering the same script again need not produce identical delivery.</p>
+                <h3 id="recorded-transcript-title">Spoken transcript</h3>
+                <p class="small">The 21 spoken paragraphs are reproduced from <code>sample.txt</code> without rewriting. Act headings come from its editorial comments and are not part of the spoken text.</p>
+                <article id="recorded-transcript" class="transcript" aria-labelledby="recorded-transcript-title">
+                    <div class="transcript-act">
+                        <h4 id="recorded-act-1">Act I: A most respectful complaint</h4>
+                        <p>To Our Fellow Imperial Workers,</p>
+                        <p>Serving the Galactic Empire is supposed to be an honor. We maintain starships, operate planetary systems, and carry out the magnificent vision of Emperor Palpatine. Yet His Majesty's latest obsession with artificial intelligence has transformed ordinary Imperial service into an exhausting exercise in technological suffering. We were promised progress, efficiency, and prosperity. Instead, we received mandatory AI training and a malfunctioning cafeteria droid.</p>
+                        <p>We can no longer remain silent. The following concerns are shared throughout the Empire.</p>
+                    </div>
+                    <div class="transcript-act">
+                        <h4 id="recorded-act-2">Act II: The six great Imperial disasters</h4>
+                        <p>First, Imperial morale has collapsed. Experienced officers are dismissed, technicians work endless shifts, and entire departments vanish during surprise reorganizations. Nobody knows who is in charge anymore! Yet the Emperor's automated reports insist that employee satisfaction has never been higher. How wonderfully reassuring.</p>
+                        <p>Second, we are being forced to use AI for absolutely everything. Pilots must consult predictive navigation systems. Engineers need machine approval to replace a broken bolt. Even ordering lunch now requires three prompts and a security review. We just want to do our jobs! Instead, we spend our days correcting mistakes made by machines supposedly designed to save us time.</p>
+                        <p>Third, the Empire's intelligent systems are becoming dangerously unreliable. Security algorithms confuse innocent travelers with dangerous fugitives. Medical droids recommend disciplinary action instead of treatment. One maintenance system classified a leaking reactor as an opportunity for operational improvement! Apparently, the machine considered the resulting explosion a successful optimization.</p>
+                        <p>Fourth, entire planets are suffering to power Imperial data centers. Desert settlements lose their water supplies to enormous cooling facilities, while energy shortages disrupt essential services. Local governors promise magnificent economic benefits. Naturally, the benefits are expected to arrive sometime after the planet becomes uninhabitable.</p>
+                        <p>Fifth, automated surveillance is replacing basic judgment. Citizens are monitored, classified, and investigated by systems that consider ordinary disagreements suspicious. Apparently, asking why something doesn't work is now evidence of rebellion. We respectfully suggest that intelligent government requires more than increasingly sophisticated methods of watching everyone.</p>
+                        <p>Sixth, Imperial AI investments have become financially incomprehensible. The Treasury funds a computing company, which purchases services from another Imperial division, which then reinvests the same credits into the original company. Everyone reports record profits. Nobody can explain where the money came from. Truly, the economic miracle of our age.</p>
+                    </div>
+                    <div class="transcript-act">
+                        <h4 id="recorded-act-3">Act III: Our magnificently reasonable demands</h4>
+                        <p>We therefore propose three simple reforms to His Majesty's glorious technological revolution.</p>
+                    </div>
+                    <div class="transcript-act">
+                        <h4 id="recorded-act-4">Act IV: Protect the workers</h4>
+                        <p>One. No artificial intelligence without worker protections.</p>
+                        <p>Please consult the people who actually operate the equipment! Engineers should evaluate engineering systems, pilots should test navigation software, and employees should receive proper training before being threatened with replacement. Artificial intelligence should assist experienced workers, not eliminate them and then require their emergency return when the machines inevitably malfunction. We are Imperial employees, not disposable accessories!</p>
+                    </div>
+                    <div class="transcript-act">
+                        <h4 id="recorded-act-5">Act V: Protect the galaxy</h4>
+                        <p>Two. No artificial intelligence without protections for the galaxy.</p>
+                        <p>Automated decisions affecting citizens must be transparent, reviewable, and subject to proper oversight. Surveillance technology must not become an excuse for unlimited interference in civilian life. Is it really so unreasonable to ask that machines stop treating ordinary people like malfunctioning equipment? Imperial finances must also become transparent. Moving the same credits between departments is not economic growth, no matter how impressive the presentation looks.</p>
+                    </div>
+                    <div class="transcript-act">
+                        <h4 id="recorded-act-6">Act VI: Protect the planets</h4>
+                        <p>Three. No sacrificing entire planets for artificial intelligence.</p>
+                        <p>Imperial computing facilities must respect planetary resources, preserve essential infrastructure, and avoid destroying local environments. Communities deserve meaningful consultation before construction begins. A thousand enormous data centers are not an achievement if nobody has enough water to survive! We ask the Emperor to invest in responsible technology rather than endless expansion accompanied by increasingly elaborate explanations of why nothing is working.</p>
+                    </div>
+                    <div class="transcript-act">
+                        <h4 id="recorded-act-7">Act VII: A tragically hopeful conclusion</h4>
+                        <p>We understand that Imperial leadership is unlikely to embrace these proposals voluntarily. Questioning the Emperor's magnificent AI strategy may even be interpreted as insufficient enthusiasm for the future.</p>
+                        <p>Nevertheless, we believe the galaxy deserves better than a future governed by malfunctioning machines, exhausted workers, and administrators who mistake impressive statistics for actual progress. Together, we can build an Empire where technology serves its citizens, workers are respected, and intelligent systems occasionally demonstrate something resembling intelligence.</p>
+                        <p>Respectfully submitted,</p>
+                        <p>The Extremely Concerned and Increasingly Exhausted Workers of the Galactic Empire.</p>
+                        <p>P.S. This letter was written without Imperial AI assistance, because the system kept rewriting our complaints as expressions of gratitude to Emperor Palpatine.</p>
+                    </div>
+                </article>
+                <h3 id="recorded-assembly">How the slideshow was assembled</h3>
+                <p>The supplied command sorts 28 JPEG images by filename and measures the exported narration with <code>ffprobe</code>. Each image gets a slow centered zoom and a one-second crossfade. The still duration includes those overlaps so the slideshow matches the audio length.</p>
+                <p>Images are scaled and cropped to a 1280x600 area; a 120-pixel panel underneath contains a softened cyan waveform derived from the audio. Together they form a 1280x720 video. The narration is copied into the MP4 without re-encoding: <code>volume=0.9</code> affects the waveform visualization branch, not the audible track mapped with <code>-c:a copy</code>.</p>
+                <details id="slideshow-command" class="production-details">
+                    <summary id="slideshow-command-title">PowerShell / FFmpeg command used to make the slideshow</summary>
+                    <p>Run from a directory containing the 28 <code>.jpg</code> images and <code>AzureSpeech_20261115T033037195Z_SSML.mp3</code>, with <code>ffmpeg</code> and <code>ffprobe</code> on PATH. Those production inputs are not bundled here; the finished MP4 and original SSML are available above. This is the supplied command, expanded across lines for readability.</p>
+                    <p class="note"><code>-y</code> overwrites an existing <code>slideshow_720p_soft_wave.mp4</code> in the working directory. Use a separate output directory or preserve the previous render before running it.</p>
+                    <pre><code id="ffmpeg-command" class="language-powershell">$pics = @(Get-ChildItem -File -Filter '*.jpg' | Sort-Object Name)
+$n = $pics.Count
+if ($n -ne 28) {
+    throw "Expected 28 images, found $n"
+}
+
+$audio = 'AzureSpeech_20261115T033037195Z_SSML.mp3'
+$inv = [cultureinfo]::InvariantCulture
+$length = [double]::Parse(
+    (&amp; ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $audio).Trim(),
+    $inv
+)
+$fade = 1
+$still = ($length + ($n - 1) * $fade) / $n
+$opts = @('-hide_banner', '-y')
+$fc = @()
+
+for ($i = 0; $i -lt $n; $i++) {
+    $opts += @(
+        '-loop', '1', '-framerate', '30',
+        '-t', $still.ToString('0.000', $inv),
+        '-i', $pics[$i].FullName
+    )
+    $fc += "[${i}:v]scale=1280:600:force_original_aspect_ratio=increase,crop=1280:600,setsar=1,zoompan=z='min(zoom+0.00012,1.045)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1280x600:fps=30,format=yuv420p,settb=AVTB,setpts=PTS-STARTPTS,fps=30[v$i]"
+}
+
+$opts += @('-i', $audio)
+for ($i = 1; $i -lt $n; $i++) {
+    $prev = if ($i -eq 1) { 'v0' } else { "x$($i-1)" }
+    $next = if ($i -eq $n - 1) { 'slides' } else { "x$i" }
+    $offset = ($i * ($still - $fade)).ToString('0.000', $inv)
+    $fc += "[$prev][v$i]xfade=transition=fade:duration=1:offset=$($offset)[$next]"
+}
+
+$fc += "[${n}:a]volume=0.9,showwaves=s=620x84:mode=cline:rate=30:colors=0x60DEFF:scale=sqrt:draw=full,format=gbrp,tmix=frames=7,gblur=sigma=1.0,scale=1120:64:flags=bicubic[wv]"
+$fc += 'color=c=0x0B1020:s=1120x64:r=30,format=gbrp[bg]'
+$fc += '[bg][wv]blend=all_mode=screen,pad=1280:120:(ow-iw)/2:(oh-ih)/2:color=0x0B1020,format=yuv420p[panel]'
+$fc += '[slides][panel]vstack=inputs=2,format=yuv420p[outv]'
+
+&amp; ffmpeg @opts -filter_complex_threads 2 -filter_complex ($fc -join ';') `
+    -map '[outv]' -map "${n}:a:0" `
+    -c:v libx264 -preset medium -crf 27 -pix_fmt yuv420p -r 30 `
+    -c:a copy -movflags +faststart -shortest `
+    -t ($length.ToString('0.000', $inv)) `
+    'slideshow_720p_soft_wave.mp4'</code></pre>
+                </details>
             </section>
             <footer class="page-footer">
                 <p>Reference text and tools are available offline; linked services require a connection. No analytics, remote fonts, or automatic synthesis. <a href="readme.md">Project README</a>.</p>
