@@ -1,8 +1,9 @@
 import { test, expect } from "bun:test";
+import { validateFeatureSource } from "../tools/security";
 import { Resources } from "../src/sdk/resources";
 import { options, defaults, validId } from "../src/sdk/validation";
 import { random } from "../src/sdk/visual";
-import { validateDescriptor } from "../tools/metadata";
+import { validateDescriptor, validateAudio } from "../tools/metadata";
 import metadata from "../src/effects/punch-element/effect.json";
 test("options are finite, bounded and reject inherited or malformed types", () => {
   expect(
@@ -127,4 +128,25 @@ test("illustrated icons reject executable or remotely referenced SVG", async () 
   expect(() =>
     validateIcon('<svg viewBox="0 0 32 32"><path fill="url(#ICON-g)" d="M1 1"/></svg>', "test"),
   ).not.toThrow();
+});
+
+test("audio profile validation rejects unbounded or malformed source metadata", () => {
+  const valid = {
+    activate: { layers: [{ wave: "sine", frequency: 110, duration: 0.15, gain: 0.1 }] },
+  };
+  expect(() => validateAudio(valid)).not.toThrow();
+  for (const patch of [
+    { gain: 1 },
+    { frequency: NaN },
+    { duration: Infinity },
+    { wave: "remote" },
+    { delay: 50 },
+    { cutoff: 0 },
+  ]) {
+    expect(() =>
+      validateAudio({ activate: { layers: [{ ...valid.activate.layers[0], ...patch }] } }),
+    ).toThrow();
+  }
+  expect(() => validateAudio({})).toThrow();
+  expect(() => validateFeatureSource("const audio = new AudioContext()", "test")).toThrow();
 });

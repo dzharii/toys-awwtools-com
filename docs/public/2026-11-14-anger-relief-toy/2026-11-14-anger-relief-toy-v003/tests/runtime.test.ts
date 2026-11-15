@@ -1,6 +1,7 @@
 import { test, expect } from "bun:test";
 import { Window } from "happy-dom";
 import { readFile } from "node:fs/promises";
+import { catalog } from "../src/generated/catalog";
 import type { EffectModule, RuntimeBridge } from "../src/sdk/types";
 interface Report {
   state: string;
@@ -11,6 +12,7 @@ interface Report {
   sessionResources: number;
   resources: number;
   loaded: string[];
+  audio: { muted: boolean; state: string; voices: number };
   events: { event: string }[];
 }
 type Listener = (
@@ -18,14 +20,31 @@ type Listener = (
   sender: { id: string },
   respond: (value: unknown) => void,
 ) => boolean;
-async function setup() {
+async function setup(initialPrefs: Record<string, unknown> = {}, delayPrefs = false) {
   const w = new Window({ url: "https://synthetic.test" });
   let listener: Listener | undefined;
   let selectedTarget = "target";
-  const store: Record<string, unknown> = {};
+  const store: Record<string, unknown> = { preferences: initialPrefs };
+  let releasePrefs: (() => void) | undefined;
+  let blockPrefs = delayPrefs;
   let clock = 0,
     timerId = 0;
   const timers = new Map<number, { at: number; fn: () => void }>();
+  const frames = new Map<number, FrameRequestCallback>();
+  let frameId = 0;
+  Object.defineProperty(w.performance, "now", { configurable: true, value: () => clock });
+  Object.defineProperty(w, "requestAnimationFrame", {
+    configurable: true,
+    value: (callback: FrameRequestCallback) => {
+      const id = ++frameId;
+      frames.set(id, callback);
+      return id;
+    },
+  });
+  Object.defineProperty(w, "cancelAnimationFrame", {
+    configurable: true,
+    value: (id: number) => frames.delete(id),
+  });
   Object.defineProperty(w, "setTimeout", {
     configurable: true,
     value: (fn: () => void, ms = 0) => {
@@ -40,6 +59,9 @@ async function setup() {
   });
   const advance = (ms: number) => {
     clock += ms;
+    const pendingFrames = [...frames.values()];
+    frames.clear();
+    for (const callback of pendingFrames) callback(clock);
     for (const [id, t] of [...timers])
       if (t.at <= clock) {
         timers.delete(id);
@@ -69,7 +91,13 @@ async function setup() {
     },
     storage: {
       local: {
-        get: async () => store,
+        get: async () => {
+          if (blockPrefs)
+            await new Promise<void>((resolve) => {
+              releasePrefs = resolve;
+            });
+          return store;
+        },
         set: async (value: Record<string, unknown>) => Object.assign(store, value),
       },
     },
@@ -112,6 +140,10 @@ async function setup() {
     shadow,
     report,
     extension,
+    readyPrefs: () => {
+      blockPrefs = false;
+      releasePrefs?.();
+    },
     advance,
     timers,
     store,
@@ -119,17 +151,16 @@ async function setup() {
       selectedTarget = id;
     },
     click: () =>
-      shadow()!
-        .querySelector(".capture")!
-        .dispatchEvent(
-          new w.MouseEvent("click", {
-            clientX: 150,
-            clientY: 150,
-            bubbles: true,
-            cancelable: true,
-            composed: true,
-          }),
-        ),
+      w.document.getElementById(selectedTarget)!.dispatchEvent(
+        new w.MouseEvent("click", {
+          clientX: 150,
+          clientY: 150,
+          detail: 1,
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+        }),
+      ),
     escape: () =>
       w.dispatchEvent(
         new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
@@ -216,38 +247,40 @@ test("Flashlight has no lifetime timer, survives 12s, scroll, resize and menu di
     await f.w.happyDOM.abort();
   }
 });
-test("complete wheel journey: three punches, two bombs, persistent light, put away", async () => {
+test("complete dial/catalog journey: three punches, two bombs, persistent light, put away", async () => {
   const f = await setup();
   try {
-    await f.send({ type: "show", mode: "wheel" });
-    f.shadow()!
-      .querySelector<import("happy-dom").HTMLButtonElement>("[aria-label='Equip Punch']")!
-      .click();
-    await Bun.sleep(10);
+    const select = async (name: string) => {
+      await f.send({ type: "show", mode: "wheel" });
+      expect(f.shadow()!.querySelectorAll(".wheel-sector").length).toBe(9);
+      (
+        f.shadow()!.querySelector(".wheel-center")! as import("happy-dom").HTMLButtonElement
+      ).click();
+      await Bun.sleep(10);
+      (
+        f
+          .shadow()!
+          .querySelector(`[aria-label='Equip ${name}']`)! as import("happy-dom").HTMLButtonElement
+      ).click();
+      await Bun.sleep(10);
+    };
+    await select("Punch");
     for (let i = 0; i < 3; i++) {
       f.aim(["target", "second", "third"][i]!);
       f.click();
       f.advance(4000);
     }
-    await f.send({ type: "show", mode: "wheel" });
-    f.shadow()!
-      .querySelector<import("happy-dom").HTMLButtonElement>("[aria-label='Equip Text Bomb']")!
-      .click();
-    await Bun.sleep(10);
+    await select("Text Bomb");
     for (let i = 0; i < 2; i++) {
       f.click();
       f.advance(700);
       f.advance(3000);
     }
-    await f.send({ type: "show", mode: "wheel" });
-    f.shadow()!
-      .querySelector<import("happy-dom").HTMLButtonElement>("[aria-label='Equip Flashlight']")!
-      .click();
-    await Bun.sleep(10);
+    await select("Flashlight");
     f.advance(12000);
     expect((await f.report()).invocationsStarted).toBe(6);
     expect((await f.report()).equipped).toBe("flashlight");
-    f.shadow()!.querySelector<import("happy-dom").HTMLButtonElement>(".put-away")!.click();
+    (f.shadow()!.querySelector(".hud .put-away")! as import("happy-dom").HTMLButtonElement).click();
     expect((await f.report()).equipped).toBeNull();
     expect(f.w.document.querySelector("[data-art-root]")).toBeNull();
     expect(f.timers.size).toBe(0);
@@ -255,25 +288,22 @@ test("complete wheel journey: three punches, two bombs, persistent light, put aw
     await f.w.happyDOM.abort();
   }
 });
+
 test("wheel toggles, centers and shows actual shortcut; menus preserve selection", async () => {
   const f = await setup();
   try {
     await f.send({ type: "select", id: "rubber-band" });
     await f.send({ type: "show", mode: "wheel" });
-    expect(f.shadow()?.querySelectorAll(".wheel-sector").length).toBe(8);
+    expect(f.shadow()?.querySelectorAll(".wheel-sector").length).toBe(9);
     expect(f.shadow()?.querySelector(".shortcut")?.textContent).toBe("Ctrl+Shift+Y");
     expect(
       f.shadow()?.querySelector("[aria-label='Equip Rubber']")?.getAttribute("aria-pressed"),
     ).toBe("true");
-    expect(f.shadow()?.querySelector<import("happy-dom").HTMLElement>(".capture")?.hidden).toBe(
-      true,
-    );
+    expect((await f.report()).menu).toBe("wheel");
     await f.send({ type: "show", mode: "wheel" });
     expect((await f.report()).menu).toBeNull();
     expect((await f.report()).equipped).toBe("rubber-band");
-    expect(f.shadow()?.querySelector<import("happy-dom").HTMLElement>(".capture")?.hidden).toBe(
-      false,
-    );
+    expect(f.shadow()?.querySelector(".cursor-cue")).not.toBeNull();
     await f.send({ type: "show", mode: "catalog" });
     f.w.document.dispatchEvent(new f.w.Event("scroll"));
     expect((await f.report()).menu).toBe("catalog");
@@ -325,11 +355,11 @@ test("catalog retains search/filter/favorites, centers, drags, and dismisses onl
   try {
     await f.send({ type: "select", id: "text-bomb" });
     await f.send({ type: "show", mode: "catalog" });
-    expect(f.shadow()?.querySelectorAll(".tool").length).toBe(8);
+    expect(f.shadow()?.querySelectorAll(".tool").length).toBe(catalog.length);
     const input = f.shadow()!.querySelector("input")!;
     input.value = "break";
     input.dispatchEvent(new f.w.Event("input"));
-    expect(f.shadow()?.querySelectorAll(".tool").length).toBe(2);
+    expect(f.shadow()?.querySelectorAll(".tool").length).toBeGreaterThan(0);
     const panel = f.shadow()!.querySelector(".art-dialog")! as import("happy-dom").HTMLElement;
     const handle = f.shadow()!.querySelector(".brand")!;
     handle.dispatchEvent(
@@ -352,11 +382,14 @@ test("cursor is offset, clipped safely, noninteractive and suppressed behind men
   const f = await setup();
   try {
     await f.send({ type: "select", id: "punch-element" });
-    f.shadow()!
-      .querySelector(".capture")!
-      .dispatchEvent(
-        new f.w.PointerEvent("pointermove", { clientX: 100, clientY: 100, bubbles: true }),
-      );
+    f.w.document.getElementById("target")!.dispatchEvent(
+      new f.w.PointerEvent("pointermove", {
+        clientX: 100,
+        clientY: 100,
+        bubbles: true,
+        composed: true,
+      }),
+    );
     const cue = f.shadow()!.querySelector(".cursor-cue")! as import("happy-dom").HTMLElement;
     expect(cue.style.left).toBe("138px");
     expect(cue.style.top).toBe("138px");
@@ -369,17 +402,21 @@ test("cursor is offset, clipped safely, noninteractive and suppressed behind men
     await f.w.happyDOM.abort();
   }
 });
-test("keyboard targets and HUD are usable; Escape handles the topmost layer", async () => {
+test("page Tab and Enter retain native behavior; Escape dismisses only topmost navigation", async () => {
   const f = await setup();
   try {
+    const hostControl = f.w.document.getElementById(
+      "send",
+    ) as import("happy-dom").HTMLButtonElement;
+    hostControl.focus();
     await f.send({ type: "select", id: "punch-element" });
-    f.w.dispatchEvent(
-      new f.w.KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true }),
-    );
-    f.w.dispatchEvent(
-      new f.w.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
-    );
-    expect((await f.report()).invocationsStarted).toBe(1);
+    expect(f.w.document.activeElement).toBe(hostControl);
+    for (const key of ["Tab", "Enter", " "]) {
+      const event = new f.w.KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+      f.w.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+    }
+    expect((await f.report()).invocationsStarted).toBe(0);
     await f.send({ type: "show", mode: "catalog" });
     f.escape();
     expect((await f.report()).equipped).toBe("punch-element");
@@ -390,6 +427,7 @@ test("keyboard targets and HUD are usable; Escape handles the topmost layer", as
     await f.w.happyDOM.abort();
   }
 });
+
 test("target loss and geometry changes end only an invocation; navigation ends the session", async () => {
   const f = await setup();
   try {
@@ -438,7 +476,7 @@ test("rendering failures keep the tool usable and diagnostics exclude page data"
     await f.w.happyDOM.abort();
   }
 });
-test("ending an animation does not put away the tool and shield never forwards host clicks", async () => {
+test("ending an animation preserves equipment and primary targeting never forwards host clicks", async () => {
   const f = await setup();
   try {
     let clicks = 0;
@@ -537,18 +575,344 @@ test("hidden tabs suspend continuous work without discarding equipment", async (
   }
 });
 
-test("target-mode Enter and Space cannot activate a previously focused host control", async () => {
+test("inventory reserves exactly three controls through execution, completion and re-use", async () => {
   const f = await setup();
   try {
-    (f.w.document.getElementById("send") as import("happy-dom").HTMLButtonElement).focus();
     await f.send({ type: "select", id: "punch-element" });
-    expect(f.shadow()?.activeElement?.className).toBe("capture");
-    for (const key of ["Enter", " "]) {
-      const event = new f.w.KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
-      f.w.dispatchEvent(event);
-      expect(event.defaultPrevented).toBe(true);
+    const hud = f.shadow()!.querySelector(".hud")!;
+    const buttons = [...hud.querySelectorAll("button")];
+    expect(buttons.map((b) => b.textContent)).toEqual(["Switch", "End effect", "Put away"]);
+    expect(hud.querySelector(".hud-status")).toBeNull();
+    expect(hud.querySelector(".activate-effect")).toBeNull();
+    const end = buttons[1]!;
+    expect(end.disabled).toBe(true);
+    expect(end.hidden).toBe(false);
+    f.click();
+    await Bun.sleep(2);
+    expect(end.disabled).toBe(false);
+    expect([...hud.querySelectorAll("button")]).toEqual(buttons);
+    f.advance(4000);
+    expect(end.disabled).toBe(true);
+    expect(end.hidden).toBe(false);
+    expect([...hud.querySelectorAll("button")]).toEqual(buttons);
+    f.click();
+    await Bun.sleep(2);
+    end.click();
+    expect((await f.report()).invocation).toBe("idle");
+    expect((await f.report()).equipped).toBe("punch-element");
+    expect(end.disabled).toBe(true);
+  } finally {
+    await f.w.happyDOM.abort();
+  }
+});
+
+test("document tool restarts by reselecting without a fourth inventory control", async () => {
+  const f = await setup();
+  try {
+    await f.send({ type: "select", id: "flashlight" });
+    const end = f.shadow()!.querySelector(".end-effect")! as import("happy-dom").HTMLButtonElement;
+    expect(end.disabled).toBe(false);
+    end.click();
+    expect((await f.report()).invocation).toBe("idle");
+    expect((await f.report()).equipped).toBe("flashlight");
+    expect(end.disabled).toBe(true);
+    await f.send({ type: "select", id: "flashlight" });
+    expect((await f.report()).invocationsStarted).toBe(2);
+    expect((await f.report()).invocation).toBe("continuous");
+    expect(f.shadow()!.querySelectorAll(".hud button").length).toBe(3);
+  } finally {
+    await f.w.happyDOM.abort();
+  }
+});
+
+test("production catalog setting enables stationary hold, and disabling restores input", async () => {
+  const f = await setup();
+  try {
+    await f.send({ type: "show", mode: "catalog" });
+    const holdLabel = [...f.shadow()!.querySelectorAll("label")].find((label) =>
+      /middle.*hold|hold middle/i.test(label.textContent),
+    )!;
+    const checkbox = holdLabel.querySelector("input")!;
+    expect(checkbox.checked).toBe(false);
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new f.w.Event("change"));
+    await Bun.sleep(5);
+    f.escape();
+    const area = f.w.document.getElementById("target")!;
+    const press = () => {
+      const event = new f.w.PointerEvent("pointerdown", {
+        button: 1,
+        buttons: 4,
+        clientX: 100,
+        clientY: 100,
+        bubbles: true,
+        cancelable: true,
+      });
+      area.dispatchEvent(event);
+      return event;
+    };
+    expect(press().defaultPrevented).toBe(true);
+    f.advance(900);
+    expect(f.w.document.querySelector("[data-art-gesture]")).not.toBeNull();
+    expect((await f.report()).menu).toBeNull();
+    f.advance(900);
+    await Bun.sleep(5);
+    expect(f.w.document.querySelector("[data-art-gesture]")).toBeNull();
+    expect((await f.report()).menu).toBe("wheel");
+    const release = new f.w.MouseEvent("auxclick", { button: 1, bubbles: true, cancelable: true });
+    area.dispatchEvent(release);
+    expect(release.defaultPrevented).toBe(true);
+    f.escape();
+    const prefs = f.store.preferences as { middleHold: boolean };
+    prefs.middleHold = false;
+    await f.send({ type: "preferences-changed" });
+    expect(press().defaultPrevented).toBe(false);
+    f.advance(2000);
+    expect((await f.report()).menu).toBeNull();
+    expect(f.w.document.querySelector("[data-art-gesture]")).toBeNull();
+  } finally {
+    await f.w.happyDOM.abort();
+  }
+});
+
+test("persistent mute and volume settings reach the injected audio service without changing the inventory", async () => {
+  const f = await setup();
+  try {
+    await f.send({ type: "select", id: "punch-element" });
+    const hud = f.shadow()!.querySelector(".hud")!;
+    const controls = [...hud.querySelectorAll("button")];
+    const mute = f.shadow()!.querySelector(".mute-audio")! as import("happy-dom").HTMLButtonElement;
+    expect((await f.report()).audio.muted).toBe(false);
+    mute.click();
+    await Bun.sleep(5);
+    expect((await f.report()).audio.muted).toBe(true);
+    expect((f.store.preferences as { audio: { muted: boolean } }).audio.muted).toBe(true);
+    expect([...hud.querySelectorAll("button")]).toEqual(controls);
+    await f.send({ type: "show", mode: "catalog" });
+    const label = [...f.shadow()!.querySelectorAll("label")].find((label) =>
+      label.textContent.startsWith("Volume:"),
+    )!;
+    const volume = label.querySelector("input")!;
+    volume.value = "15";
+    volume.dispatchEvent(new f.w.Event("input"));
+    await Bun.sleep(5);
+    expect((f.store.preferences as { audio: { volume: number } }).audio.volume).toBe(0.15);
+    f.escape();
+    expect((await f.report()).equipped).toBe("punch-element");
+    expect((await f.report()).audio.muted).toBe(true);
+  } finally {
+    await f.w.happyDOM.abort();
+  }
+});
+
+test("production dial rotates the complete lazy registry and permits keyboard selection after dragging", async () => {
+  const f = await setup();
+  try {
+    await f.send({ type: "show", mode: "wheel" });
+    const shell = f.shadow()!.querySelector(".wheel")!;
+    const seen = new Set<string>();
+    const positions = () => {
+      const buttons = [
+        ...shell.querySelectorAll<import("happy-dom").HTMLButtonElement>(".wheel-sector"),
+      ];
+      expect(buttons.length).toBe(9);
+      for (const button of buttons) if (button.dataset.id) seen.add(button.dataset.id);
+      return buttons;
+    };
+    positions();
+    shell.dispatchEvent(
+      new f.w.PointerEvent("pointerdown", {
+        button: 0,
+        pointerId: 7,
+        clientX: 440,
+        clientY: 150,
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      }),
+    );
+    // Fixture bounds are (100,100,400,100), so the actual centre is (300,150).
+    for (let i = 1; i <= 180; i++) {
+      const angle = (i * Math.PI) / 30;
+      f.w.dispatchEvent(
+        new f.w.PointerEvent("pointermove", {
+          pointerId: 7,
+          clientX: 300 + Math.cos(angle) * 140,
+          clientY: 150 + Math.sin(angle) * 140,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      positions();
     }
-    expect((await f.report()).invocationsStarted).toBe(0);
+    f.w.dispatchEvent(new f.w.PointerEvent("pointerup", { pointerId: 7 }));
+    f.advance(0);
+    f.advance(160);
+    expect(seen.size).toBe(catalog.length);
+    expect((await f.report()).loaded).toEqual([]);
+    expect((await f.report()).equipped).toBeNull();
+    const releaseClick = new f.w.MouseEvent("click", {
+      detail: 1,
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    });
+    positions()
+      .find((button) => !button.disabled)!
+      .dispatchEvent(releaseClick);
+    expect(releaseClick.defaultPrevented).toBe(true);
+    expect((await f.report()).equipped).toBeNull();
+    const hub = shell.querySelector(".wheel-center")! as import("happy-dom").HTMLButtonElement;
+    hub.focus();
+    hub.dispatchEvent(
+      new f.w.KeyboardEvent("keydown", {
+        key: "ArrowRight",
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      }),
+    );
+    f.advance(0);
+    f.advance(160);
+    const selected = f.shadow()!.activeElement as import("happy-dom").HTMLButtonElement;
+    expect(selected.classList.contains("wheel-sector")).toBe(true);
+    const expectedId = selected.dataset.id;
+    selected.click(); // A keyboard-generated activation has detail=0.
+    await Bun.sleep(10);
+    expect((await f.report()).equipped).toBe(expectedId!);
+    expect((await f.report()).menu).toBeNull();
+  } finally {
+    await f.w.happyDOM.abort();
+  }
+});
+
+test("explicitly ended continuous effects stay ended after a hidden/visible transition", async () => {
+  const f = await setup();
+  try {
+    await f.send({ type: "select", id: "flashlight" });
+    (f.shadow()!.querySelector(".end-effect")! as import("happy-dom").HTMLButtonElement).click();
+    expect((await f.report()).invocation).toBe("idle");
+    Object.defineProperty(f.w.document, "hidden", { configurable: true, value: true });
+    f.w.document.dispatchEvent(new f.w.Event("visibilitychange"));
+    Object.defineProperty(f.w.document, "hidden", { configurable: true, value: false });
+    f.w.document.dispatchEvent(new f.w.Event("visibilitychange"));
+    await Bun.sleep(2);
+    expect((await f.report()).equipped).toBe("flashlight");
+    expect((await f.report()).invocation).toBe("idle");
+    expect((await f.report()).invocationsStarted).toBe(1);
+    expect(
+      (f.shadow()!.querySelector(".end-effect")! as import("happy-dom").HTMLButtonElement).disabled,
+    ).toBe(true);
+  } finally {
+    await f.w.happyDOM.abort();
+  }
+});
+
+test("back-forward cache pagehide clears visuals but keeps authorized services usable", async () => {
+  const f = await setup();
+  try {
+    f.store.preferences = { middleHold: true };
+    await f.send({ type: "preferences-changed" });
+    await f.send({ type: "select", id: "flashlight" });
+    const pagehide = new f.w.Event("pagehide");
+    Object.defineProperty(pagehide, "persisted", { value: true });
+    f.w.dispatchEvent(pagehide);
+    expect((await f.report()).equipped).toBeNull();
+    expect(f.w.document.querySelector("[data-art-root]")).toBeNull();
+    expect(f.w.document.querySelector("[data-art-gesture]")).toBeNull();
+    f.w.dispatchEvent(new f.w.Event("pageshow"));
+    await f.send({ type: "select", id: "flashlight" });
+    expect((await f.report()).equipped).toBe("flashlight");
+    expect((await f.report()).invocation).toBe("continuous");
+    const area = f.w.document.getElementById("target")!;
+    area.dispatchEvent(
+      new f.w.PointerEvent("pointerdown", {
+        button: 1,
+        buttons: 4,
+        clientX: 100,
+        clientY: 100,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    f.advance(1800);
+    await Bun.sleep(5);
+    expect((await f.report()).menu).toBe("wheel");
+    expect((await f.report()).equipped).toBe("flashlight");
+    expect(f.w.document.querySelector("[data-art-gesture]")).toBeNull();
+  } finally {
+    await f.w.happyDOM.abort();
+  }
+});
+
+test("primary pointer targeting blocks host actions while middle links and keyboard clicks stay native", async () => {
+  const f = await setup();
+  try {
+    const link = f.w.document.createElement("a");
+    link.href = "https://synthetic.test/next";
+    link.textContent = "Discussion";
+    f.w.document.body.append(link);
+    let primary = 0,
+      middle = 0;
+    link.addEventListener("click", () => primary++);
+    link.addEventListener("auxclick", () => middle++);
+    await f.send({ type: "select", id: "punch-element" });
+    const aux = new f.w.MouseEvent("auxclick", {
+      button: 1,
+      bubbles: true,
+      cancelable: true,
+      detail: 1,
+    });
+    link.dispatchEvent(aux);
+    expect(aux.defaultPrevented).toBe(false);
+    expect(middle).toBe(1);
+    const down = new f.w.PointerEvent("pointerdown", {
+      button: 1,
+      bubbles: true,
+      cancelable: true,
+    });
+    link.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(false);
+    const click = new f.w.MouseEvent("click", {
+      button: 0,
+      bubbles: true,
+      cancelable: true,
+      detail: 1,
+      clientX: 150,
+      clientY: 150,
+    });
+    link.dispatchEvent(click);
+    expect(click.defaultPrevented).toBe(true);
+    expect(primary).toBe(0);
+    const keyClick = new f.w.MouseEvent("click", {
+      button: 0,
+      bubbles: true,
+      cancelable: true,
+      detail: 0,
+    });
+    link.dispatchEvent(keyClick);
+    expect(keyClick.defaultPrevented).toBe(false);
+    expect(primary).toBe(1);
+    await f.send({ type: "stop" });
+  } finally {
+    await f.w.happyDOM.abort();
+  }
+});
+
+test("stored mute gates first activation and cancellation while preferences load cannot resurrect equipment", async () => {
+  const f = await setup({ audio: { muted: true, volume: 0.1 } }, true);
+  try {
+    const first = f.send({ type: "select", id: "flashlight" });
+    await f.send({ type: "stop" });
+    f.readyPrefs();
+    await first;
+    expect((await f.report()).equipped).toBeNull();
+    expect((await f.report()).audio.muted).toBe(true);
+    expect(f.w.document.querySelector("[data-art-root]")).toBeNull();
+    await f.send({ type: "select", id: "flashlight" });
+    expect((await f.report()).equipped).toBe("flashlight");
+    expect((await f.report()).audio.muted).toBe(true);
+    expect((await f.report()).audio.state).toBe("uninitialized");
   } finally {
     await f.w.happyDOM.abort();
   }

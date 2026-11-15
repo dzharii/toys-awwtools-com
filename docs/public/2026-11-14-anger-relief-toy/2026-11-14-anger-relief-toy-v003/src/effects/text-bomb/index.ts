@@ -20,6 +20,7 @@ export default {
       c.resources.timeout(
         () => {
           bomb.remove();
+          c.audio?.play("detonate");
           const rng = random(17);
           const walker = c.document.createTreeWalker(target.element, NodeFilter.SHOW_TEXT);
           let node: Node | null;

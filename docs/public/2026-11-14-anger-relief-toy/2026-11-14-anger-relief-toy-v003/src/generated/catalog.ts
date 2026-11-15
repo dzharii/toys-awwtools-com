@@ -2,8 +2,325 @@
 import type { Descriptor } from '../sdk/types';
 export const catalog: Descriptor[] = [
   {
+    "id": "burn-page",
+    "version": "1.0.0",
+    "sdkVersion": "1.0",
+    "name": "Burn the Page",
+    "description": "Char a selected surface and watch its embers rise.",
+    "category": "Transform",
+    "tags": [
+      "burn",
+      "playful"
+    ],
+    "scope": "element",
+    "interaction": "click",
+    "intensity": "medium",
+    "icon": "M4 5h24v23H4z",
+    "color": "#fb923c",
+    "source": {
+      "researchId": "cr004-burn-page",
+      "name": "Burn the Web",
+      "author": "James P. Burke",
+      "url": "https://github.com/JamesPBurke/burnit",
+      "relationship": "Independently reconstructed behavioral inspiration; no source or assets reused",
+      "license": "Project-owned implementation, icon and procedural audio; original source license not relied upon"
+    },
+    "enabled": true,
+    "status": "review-pending",
+    "activation": "replace",
+    "capabilities": {
+      "reducedMotion": true,
+      "audio": true,
+      "pause": false
+    },
+    "lifetime": {
+      "overlap": "replace",
+      "animationMs": 2300,
+      "residueMs": 0,
+      "class": "repeatable"
+    },
+    "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop stop-color=\"#ffd36a\"/><stop offset=\"1\" stop-color=\"#ef532e\"/></linearGradient></defs><path d=\"M17 2c4 9-2 8 3 13 2-2 3-3 3-5 7 9 7 20-7 21C2 30 3 18 10 11c-1 6 2 5 4 8 4-6-2-10 3-17Z\" fill=\"url(#ICON-g)\"/><path d=\"M16 17c1 5 6 5 4 10-1 4-9 4-9-1 0-4 4-5 5-9Z\" fill=\"#fff2ad\"/></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 500,
+            "cutoff": 1600,
+            "duration": 0.2,
+            "gain": 0.045
+          }
+        ]
+      },
+      "crackle": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 900,
+            "cutoff": 2100,
+            "duration": 0.6,
+            "gain": 0.035,
+            "attack": 0.08
+          },
+          {
+            "wave": "noise",
+            "frequency": 600,
+            "cutoff": 1500,
+            "duration": 0.17,
+            "delay": 0.12,
+            "gain": 0.025
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "celebration-cannon",
+    "version": "1.0.0",
+    "sdkVersion": "1.0",
+    "name": "Celebration Cannon",
+    "description": "Fire confetti and ribbons around a selected element.",
+    "category": "Play",
+    "tags": [
+      "celebration",
+      "playful"
+    ],
+    "scope": "element",
+    "interaction": "click",
+    "intensity": "medium",
+    "icon": "M4 5h24v23H4z",
+    "color": "#fbbf24",
+    "source": {
+      "researchId": "cr004-celebration-cannon",
+      "name": "Web Pranks",
+      "author": "steveja42",
+      "url": "https://github.com/steveja42/webpranks",
+      "relationship": "Independently reconstructed behavioral inspiration; no source or assets reused",
+      "license": "Project-owned implementation, icon and procedural audio; original source license not relied upon"
+    },
+    "enabled": true,
+    "status": "review-pending",
+    "activation": "replace",
+    "capabilities": {
+      "reducedMotion": true,
+      "audio": true,
+      "pause": false
+    },
+    "lifetime": {
+      "overlap": "replace",
+      "animationMs": 2300,
+      "residueMs": 0,
+      "class": "repeatable"
+    },
+    "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop stop-color=\"#ffc0d7\"/><stop offset=\"1\" stop-color=\"#ed688a\"/></linearGradient></defs><path d=\"m4 29 6-21 15 14Z\" fill=\"url(#ICON-g)\"/><path d=\"m7 20 8 6M9 13l11 10\" stroke=\"#ffe59f\" stroke-width=\"3\"/><path d=\"m17 10 4-6M23 15l7-1M13 5l-1-3\" stroke=\"#40c9bd\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><circle cx=\"27\" cy=\"5\" r=\"2\" fill=\"#fa8caa\"/><path d=\"m24 25 3 4M6 5 3 3\" stroke=\"#b695f6\" stroke-width=\"2.5\"/></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 900,
+            "cutoff": 2400,
+            "duration": 0.14,
+            "gain": 0.07
+          },
+          {
+            "wave": "sine",
+            "frequency": 350,
+            "endFrequency": 100,
+            "duration": 0.12,
+            "gain": 0.08
+          },
+          {
+            "wave": "triangle",
+            "frequency": 660,
+            "endFrequency": 880,
+            "duration": 0.25,
+            "gain": 0.025,
+            "delay": 0.07
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "color-splash",
+    "version": "1.0.0",
+    "sdkVersion": "1.0",
+    "name": "Color Splash",
+    "description": "Throw a glossy burst of paint onto a selected page region.",
+    "category": "Transform",
+    "tags": [
+      "color",
+      "original",
+      "playful"
+    ],
+    "scope": "element",
+    "interaction": "click",
+    "intensity": "low",
+    "icon": "M6 6h20v20h-20z",
+    "color": "#eb809b",
+    "source": {
+      "researchId": "candidate-color-splash",
+      "name": "DevBubba collection: Color Drop",
+      "author": "DevBubba (historical lead, unverified)",
+      "url": "https://devbubba.github.io/Bookmarklets/",
+      "relationship": "Independent implementation of described concept; no source or assets reused",
+      "license": "Project-owned original code, icons and synthesized audio; historical source license unverified"
+    },
+    "enabled": true,
+    "status": "review-pending",
+    "activation": "replace",
+    "capabilities": {
+      "reducedMotion": true,
+      "audio": true,
+      "pause": false
+    },
+    "lifetime": {
+      "class": "repeatable",
+      "overlap": "replace",
+      "animationMs": 1400,
+      "residueMs": 300
+    },
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#faafbf\"/><stop offset=\"1\" stop-color=\"#e56694\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15 3 19 9 25 6 24 13 30 16 24 20 26 26 19 24 15 30 12 24 5 26 7 19 2 15 9 12 8 6 13 9Z\" fill=\"url(#ICON-g)\"/><ellipse cx=\"15\" cy=\"15\" rx=\"7\" ry=\"6\" fill=\"#f8aabc\" stroke=\"none\"/><path d=\"m11 12 3-2 3 1\" fill=\"none\" stroke=\"#fff4ef\" stroke-width=\"2\"/><circle cx=\"28\" cy=\"5\" r=\"2\" fill=\"#6ac7c4\"/><circle cx=\"3\" cy=\"28\" r=\"2\" fill=\"#f6c161\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 300,
+            "duration": 0.23,
+            "gain": 0.075,
+            "cutoff": 850
+          },
+          {
+            "wave": "sine",
+            "frequency": 210,
+            "endFrequency": 80,
+            "duration": 0.15,
+            "gain": 0.065
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "depth-page",
+    "version": "1.0.0",
+    "sdkVersion": "1.0",
+    "name": "Depth Page",
+    "description": "Lift page cards into a layered, pointer-responsive perspective.",
+    "category": "Environment",
+    "tags": [
+      "depth",
+      "original",
+      "playful"
+    ],
+    "scope": "document",
+    "interaction": "pointer",
+    "intensity": "low",
+    "icon": "M6 6h20v20h-20z",
+    "color": "#79a7e8",
+    "source": {
+      "researchId": "candidate-depth-page",
+      "name": "DevBubba collection: 3D Webpage",
+      "author": "DevBubba (historical lead, unverified)",
+      "url": "https://devbubba.github.io/Bookmarklets/",
+      "relationship": "Independent implementation of described concept; no source or assets reused",
+      "license": "Project-owned original code, icons and synthesized audio; historical source license unverified"
+    },
+    "enabled": true,
+    "status": "review-pending",
+    "activation": "replace",
+    "capabilities": {
+      "reducedMotion": true,
+      "audio": true,
+      "pause": false
+    },
+    "lifetime": {
+      "class": "simulation",
+      "overlap": "replace",
+      "animationMs": 1000,
+      "residueMs": 0
+    },
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#e0efff\"/><stop offset=\"1\" stop-color=\"#76a8df\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 20 11-5 11 5-11 6z\" fill=\"#629ad0\"/><path d=\"m5 14 11-5 11 5-11 6z\" fill=\"#9abde8\"/><path d=\"m5 8 11-5 11 5-11 6z\" fill=\"url(#ICON-g)\"/><path d=\"m11 7 9 1-4 3\" fill=\"none\" stroke=\"#ffffff\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "triangle",
+            "frequency": 230,
+            "endFrequency": 460,
+            "duration": 0.24,
+            "gain": 0.045
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "disintegrate",
+    "version": "1.0.0",
+    "sdkVersion": "1.0",
+    "name": "Disintegrate",
+    "description": "Dissolve a complete surface into drifting fragments.",
+    "category": "Transform",
+    "tags": [
+      "disintegrate",
+      "playful"
+    ],
+    "scope": "element",
+    "interaction": "click",
+    "intensity": "medium",
+    "icon": "M4 5h24v23H4z",
+    "color": "#c4b5fd",
+    "source": {
+      "researchId": "cr004-disintegrate",
+      "name": "Disintegrate",
+      "author": "Zach Saucier",
+      "url": "https://github.com/ZachSaucier/Disintegrate",
+      "relationship": "Independently reconstructed behavioral inspiration; no source or assets reused",
+      "license": "Project-owned implementation, icon and procedural audio; original source license not relied upon"
+    },
+    "enabled": true,
+    "status": "review-pending",
+    "activation": "replace",
+    "capabilities": {
+      "reducedMotion": true,
+      "audio": true,
+      "pause": false
+    },
+    "lifetime": {
+      "overlap": "replace",
+      "animationMs": 2100,
+      "residueMs": 0,
+      "class": "repeatable"
+    },
+    "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop stop-color=\"#c9b7f6\"/><stop offset=\"1\" stop-color=\"#8065cb\"/></linearGradient></defs><path d=\"M3 6h17v21H3z\" fill=\"url(#ICON-g)\"/><path d=\"M3 6h13v5H3z\" fill=\"#e9e0ff\"/><rect x=\"21\" y=\"4\" width=\"5\" height=\"5\" rx=\"1\" fill=\"#b099f4\"/><rect x=\"23\" y=\"13\" width=\"6\" height=\"5\" rx=\"1\" fill=\"#d0bffa\"/><rect x=\"20\" y=\"22\" width=\"4\" height=\"4\" rx=\"1\" fill=\"#977ae3\"/><rect x=\"28\" y=\"24\" width=\"3\" height=\"3\" fill=\"#bba3ec\"/></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 1300,
+            "cutoff": 2700,
+            "duration": 0.65,
+            "gain": 0.045,
+            "attack": 0.06
+          },
+          {
+            "wave": "triangle",
+            "frequency": 370,
+            "endFrequency": 180,
+            "duration": 0.3,
+            "gain": 0.025
+          }
+        ]
+      }
+    }
+  },
+  {
     "id": "flashlight",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "sdkVersion": "1.0",
     "name": "Flashlight",
     "description": "Lights out. Follow your own circle of light.",
@@ -30,7 +347,7 @@ export const catalog: Descriptor[] = [
     "activation": "replace",
     "capabilities": {
       "reducedMotion": true,
-      "audio": false,
+      "audio": true,
       "pause": false
     },
     "lifetime": {
@@ -39,11 +356,31 @@ export const catalog: Descriptor[] = [
       "animationMs": 1000,
       "residueMs": 200
     },
-    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#ffe79b\"/><stop offset=\"1\" stop-color=\"#e2a52a\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m7 18 13-13 7 7-13 13z\" fill=\"url(#ICON-g)\"/><path d=\"m18 7 3-3 7 7-3 3z\" fill=\"#44536b\"/><path d=\"m3 18 7-2 8 8-2 7z\" fill=\"#45556b\"/><ellipse cx=\"10\" cy=\"24\" rx=\"5\" ry=\"7\" transform=\"rotate(-45 10 24)\" fill=\"#fff2ba\"/><ellipse cx=\"10\" cy=\"24\" rx=\"3\" ry=\"5\" transform=\"rotate(-45 10 24)\" fill=\"#fffdf2\" stroke=\"none\"/><path d=\"m17 12 3 3\" stroke=\"#42516a\" stroke-width=\"3\"/></g></svg>\n"
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#ffe79b\"/><stop offset=\"1\" stop-color=\"#e2a52a\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m7 18 13-13 7 7-13 13z\" fill=\"url(#ICON-g)\"/><path d=\"m18 7 3-3 7 7-3 3z\" fill=\"#44536b\"/><path d=\"m3 18 7-2 8 8-2 7z\" fill=\"#45556b\"/><ellipse cx=\"10\" cy=\"24\" rx=\"5\" ry=\"7\" transform=\"rotate(-45 10 24)\" fill=\"#fff2ba\"/><ellipse cx=\"10\" cy=\"24\" rx=\"3\" ry=\"5\" transform=\"rotate(-45 10 24)\" fill=\"#fffdf2\" stroke=\"none\"/><path d=\"m17 12 3 3\" stroke=\"#42516a\" stroke-width=\"3\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 400,
+            "duration": 0.022,
+            "gain": 0.04,
+            "cutoff": 1600
+          },
+          {
+            "wave": "triangle",
+            "frequency": 650,
+            "duration": 0.04,
+            "gain": 0.015,
+            "endFrequency": 400
+          }
+        ]
+      }
+    }
   },
   {
     "id": "glass-shatter",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "sdkVersion": "1.0",
     "name": "Shatter",
     "description": "Turn a comment into a shower of glass shards.",
@@ -73,7 +410,7 @@ export const catalog: Descriptor[] = [
     "activation": "replace",
     "capabilities": {
       "reducedMotion": true,
-      "audio": false,
+      "audio": true,
       "pause": false
     },
     "lifetime": {
@@ -82,11 +419,67 @@ export const catalog: Descriptor[] = [
       "animationMs": 2000,
       "residueMs": 200
     },
-    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#b8ecff\"/><stop offset=\"1\" stop-color=\"#4499d0\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m4 6 9 3-5 8zM18 3l10 2-9 9zM16 15l11 2-5 10zM10 20l5 5-10 4z\" fill=\"url(#ICON-g)\"/><path d=\"m6 7 3 7m12-9-1 6m-2 8 4 4\" fill=\"none\" stroke=\"#eefcff\" stroke-width=\"1.4\"/></g></svg>\n"
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#b8ecff\"/><stop offset=\"1\" stop-color=\"#4499d0\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m4 6 9 3-5 8zM18 3l10 2-9 9zM16 15l11 2-5 10zM10 20l5 5-10 4z\" fill=\"url(#ICON-g)\"/><path d=\"m6 7 3 7m12-9-1 6m-2 8 4 4\" fill=\"none\" stroke=\"#eefcff\" stroke-width=\"1.4\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 1200,
+            "duration": 0.09,
+            "gain": 0.085,
+            "cutoff": 4200
+          },
+          {
+            "wave": "triangle",
+            "frequency": 1700,
+            "duration": 0.12,
+            "gain": 0.03,
+            "endFrequency": 700
+          }
+        ]
+      },
+      "scatter": {
+        "layers": [
+          {
+            "wave": "triangle",
+            "frequency": 2100,
+            "duration": 0.12,
+            "gain": 0.016,
+            "delay": 0,
+            "endFrequency": 1680
+          },
+          {
+            "wave": "triangle",
+            "frequency": 3300,
+            "duration": 0.12,
+            "gain": 0.016,
+            "delay": 0.05,
+            "endFrequency": 2640
+          },
+          {
+            "wave": "triangle",
+            "frequency": 1400,
+            "duration": 0.12,
+            "gain": 0.016,
+            "delay": 0.1,
+            "endFrequency": 1120
+          },
+          {
+            "wave": "triangle",
+            "frequency": 2700,
+            "duration": 0.12,
+            "gain": 0.016,
+            "delay": 0.15000000000000002,
+            "endFrequency": 2160
+          }
+        ]
+      }
+    }
   },
   {
     "id": "gravity-collapse",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "sdkVersion": "1.0",
     "name": "Gravity",
     "description": "Let the visible page drop. Watch it bounce.",
@@ -113,7 +506,7 @@ export const catalog: Descriptor[] = [
     "activation": "replace",
     "capabilities": {
       "reducedMotion": true,
-      "audio": false,
+      "audio": true,
       "pause": false
     },
     "lifetime": {
@@ -122,11 +515,179 @@ export const catalog: Descriptor[] = [
       "animationMs": 1000,
       "residueMs": 200
     },
-    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#c1ccd4\"/><stop offset=\"1\" stop-color=\"#566474\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"16\" cy=\"28\" rx=\"11\" ry=\"2\" fill=\"#253749\" opacity=\".12\" stroke=\"none\"/><path d=\"m9 12 14 0 5 14c-6 3-18 3-24 0z\" fill=\"url(#ICON-g)\"/><circle cx=\"16\" cy=\"9\" r=\"4\" fill=\"none\" stroke=\"#627387\" stroke-width=\"2.5\"/><path d=\"M11 16 8 24\" stroke=\"#e6f0f6\" stroke-width=\"2\"/><path d=\"M5 3v6m22-6v6\" stroke=\"#7fc8df\" stroke-width=\"2\"/></g></svg>\n"
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#c1ccd4\"/><stop offset=\"1\" stop-color=\"#566474\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"16\" cy=\"28\" rx=\"11\" ry=\"2\" fill=\"#253749\" opacity=\".12\" stroke=\"none\"/><path d=\"m9 12 14 0 5 14c-6 3-18 3-24 0z\" fill=\"url(#ICON-g)\"/><circle cx=\"16\" cy=\"9\" r=\"4\" fill=\"none\" stroke=\"#627387\" stroke-width=\"2.5\"/><path d=\"M11 16 8 24\" stroke=\"#e6f0f6\" stroke-width=\"2\"/><path d=\"M5 3v6m22-6v6\" stroke=\"#7fc8df\" stroke-width=\"2\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "sine",
+            "frequency": 200,
+            "duration": 0.15,
+            "gain": 0.05,
+            "endFrequency": 90
+          }
+        ]
+      },
+      "collision": {
+        "layers": [
+          {
+            "wave": "sine",
+            "frequency": 110,
+            "duration": 0.12,
+            "gain": 0.1,
+            "endFrequency": 40
+          },
+          {
+            "wave": "noise",
+            "frequency": 100,
+            "duration": 0.055,
+            "gain": 0.04,
+            "cutoff": 800
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "matrix-rain",
+    "version": "1.0.0",
+    "sdkVersion": "1.0",
+    "name": "Matrix Rain",
+    "description": "Watch fictional digital characters drift in restrained green columns.",
+    "category": "Environment",
+    "tags": [
+      "matrix",
+      "original",
+      "playful"
+    ],
+    "scope": "viewport",
+    "interaction": "automatic",
+    "intensity": "low",
+    "icon": "M6 6h20v20h-20z",
+    "color": "#69af93",
+    "source": {
+      "researchId": "candidate-matrix-rain",
+      "name": "CriminalPear Bookmarklet Collection: MatrixRain",
+      "author": "criminalpear (collection)",
+      "url": "https://github.com/criminalpear/Bookmarklets",
+      "relationship": "Independent implementation of described concept; no source or assets reused",
+      "license": "Project-owned original code, icons and synthesized audio; historical source license unverified"
+    },
+    "enabled": true,
+    "status": "review-pending",
+    "activation": "replace",
+    "capabilities": {
+      "reducedMotion": true,
+      "audio": true,
+      "pause": false
+    },
+    "lifetime": {
+      "class": "continuous",
+      "overlap": "replace",
+      "animationMs": 1000,
+      "residueMs": 0
+    },
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#b0efc1\"/><stop offset=\"1\" stop-color=\"#63b894\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"2\" width=\"24\" height=\"28\" rx=\"6\" fill=\"#284b40\"/><g fill=\"none\" stroke=\"url(#ICON-g)\" stroke-width=\"2\"><path d=\"M9 6v5m-2-3 2-2 2 2M16 4v4m-2 3h4l-4 4h4M23 8v5m-2 3 2 2 2-2M9 16v4m-2 3h4M16 21v5m5-2h4\"/></g></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "triangle",
+            "frequency": 360,
+            "endFrequency": 180,
+            "duration": 0.21,
+            "gain": 0.035
+          },
+          {
+            "wave": "sine",
+            "frequency": 720,
+            "endFrequency": 540,
+            "duration": 0.13,
+            "gain": 0.025,
+            "delay": 0.06
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "page-dance",
+    "version": "1.0.0",
+    "sdkVersion": "1.0",
+    "name": "Page Dance",
+    "description": "Make visible content dance in a coordinated rhythm.",
+    "category": "Play",
+    "tags": [
+      "page",
+      "playful"
+    ],
+    "scope": "document",
+    "interaction": "automatic",
+    "intensity": "medium",
+    "icon": "M4 5h24v23H4z",
+    "color": "#a78bfa",
+    "source": {
+      "researchId": "cr004-page-dance",
+      "name": "Harlem Shake bookmarklet",
+      "author": "Moovweb; Hari Ananth, Omar Jalalzada, Ishan Anand",
+      "url": "https://hacks.mozilla.org/2014/02/html5-css3-and-the-bookmarklet-that-shook-the-web/",
+      "relationship": "Independently reconstructed behavioral inspiration; no source or assets reused",
+      "license": "Project-owned implementation, icon and procedural audio; original source license not relied upon"
+    },
+    "enabled": true,
+    "status": "review-pending",
+    "activation": "replace",
+    "capabilities": {
+      "reducedMotion": true,
+      "audio": true,
+      "pause": false
+    },
+    "lifetime": {
+      "overlap": "replace",
+      "animationMs": 1200,
+      "residueMs": 0,
+      "class": "simulation"
+    },
+    "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop stop-color=\"#d7b5fc\"/><stop offset=\"1\" stop-color=\"#9175df\"/></linearGradient></defs><path d=\"M5 12h13v17H5z\" fill=\"url(#ICON-g)\" transform=\"rotate(-12 12 20)\"/><path d=\"M8 15h7M8 19h6M8 23h5\" stroke=\"#fff\" stroke-width=\"1.5\"/><path d=\"M22 4v15c-6-2-7 6-2 6 3 0 4-2 4-5V8l5-2V2z\" fill=\"#f7ad55\"/></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "sine",
+            "frequency": 180,
+            "endFrequency": 70,
+            "duration": 0.12,
+            "gain": 0.075
+          },
+          {
+            "wave": "triangle",
+            "frequency": 330,
+            "duration": 0.1,
+            "gain": 0.035,
+            "delay": 0.15
+          },
+          {
+            "wave": "sine",
+            "frequency": 180,
+            "endFrequency": 70,
+            "duration": 0.12,
+            "gain": 0.06,
+            "delay": 0.3
+          },
+          {
+            "wave": "triangle",
+            "frequency": 440,
+            "duration": 0.12,
+            "gain": 0.03,
+            "delay": 0.45
+          }
+        ]
+      }
+    }
   },
   {
     "id": "punch-element",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "sdkVersion": "1.0",
     "name": "Punch",
     "description": "Give that message a comic-book right hook.",
@@ -153,7 +714,7 @@ export const catalog: Descriptor[] = [
     "activation": "replace",
     "capabilities": {
       "reducedMotion": true,
-      "audio": false,
+      "audio": true,
       "pause": false
     },
     "lifetime": {
@@ -162,11 +723,42 @@ export const catalog: Descriptor[] = [
       "animationMs": 1000,
       "residueMs": 200
     },
-    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#ff867e\"/><stop offset=\"1\" stop-color=\"#cc304c\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 22c-2-2-3-5-2-8-3-2-2-6 1-6 1-5 6-6 10-4 7 2 8 9 4 14l-4 6z\" fill=\"url(#ICON-g)\"/><path d=\"m8 21 10 3-2 6-10-3z\" fill=\"#c82e49\"/><path d=\"m8 24 8 2\" stroke=\"#ffd5d2\" stroke-width=\"2\"/><path d=\"M10 8c2-3 6-3 9-1\" stroke=\"#ffd5d2\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M9 13c1 3 4 5 7 4\" fill=\"none\" stroke=\"#ad2940\"/></g></svg>\n"
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#ff867e\"/><stop offset=\"1\" stop-color=\"#cc304c\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 22c-2-2-3-5-2-8-3-2-2-6 1-6 1-5 6-6 10-4 7 2 8 9 4 14l-4 6z\" fill=\"url(#ICON-g)\"/><path d=\"m8 21 10 3-2 6-10-3z\" fill=\"#c82e49\"/><path d=\"m8 24 8 2\" stroke=\"#ffd5d2\" stroke-width=\"2\"/><path d=\"M10 8c2-3 6-3 9-1\" stroke=\"#ffd5d2\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M9 13c1 3 4 5 7 4\" fill=\"none\" stroke=\"#ad2940\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 100,
+            "duration": 0.035,
+            "gain": 0.025,
+            "cutoff": 750
+          }
+        ]
+      },
+      "impact": {
+        "layers": [
+          {
+            "wave": "sine",
+            "frequency": 145,
+            "duration": 0.15,
+            "gain": 0.15,
+            "endFrequency": 48
+          },
+          {
+            "wave": "noise",
+            "frequency": 100,
+            "duration": 0.07,
+            "gain": 0.1,
+            "cutoff": 1450
+          }
+        ]
+      }
+    }
   },
   {
     "id": "rubber-band",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "sdkVersion": "1.0",
     "name": "Rubber",
     "description": "Make a perfectly serious card wobble like jelly.",
@@ -193,7 +785,7 @@ export const catalog: Descriptor[] = [
     "activation": "replace",
     "capabilities": {
       "reducedMotion": true,
-      "audio": false,
+      "audio": true,
       "pause": false
     },
     "lifetime": {
@@ -202,11 +794,31 @@ export const catalog: Descriptor[] = [
       "animationMs": 1300,
       "residueMs": 200
     },
-    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#ffb5cc\"/><stop offset=\"1\" stop-color=\"#d8558b\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"16\" cy=\"22\" rx=\"13\" ry=\"7\" fill=\"#b74074\"/><path d=\"M3 13v9c0 9 26 9 26 0v-9\" fill=\"url(#ICON-g)\"/><ellipse cx=\"16\" cy=\"13\" rx=\"13\" ry=\"7\" fill=\"url(#ICON-g)\"/><ellipse cx=\"16\" cy=\"13\" rx=\"8\" ry=\"3.5\" fill=\"#89365c\"/><path d=\"M5 18c5 5 17 5 22 0M5 23c5 4 17 4 22 0\" fill=\"none\" stroke=\"#ffb7d0\" stroke-width=\"1\"/></g></svg>\n"
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#ffb5cc\"/><stop offset=\"1\" stop-color=\"#d8558b\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"16\" cy=\"22\" rx=\"13\" ry=\"7\" fill=\"#b74074\"/><path d=\"M3 13v9c0 9 26 9 26 0v-9\" fill=\"url(#ICON-g)\"/><ellipse cx=\"16\" cy=\"13\" rx=\"13\" ry=\"7\" fill=\"url(#ICON-g)\"/><ellipse cx=\"16\" cy=\"13\" rx=\"8\" ry=\"3.5\" fill=\"#89365c\"/><path d=\"M5 18c5 5 17 5 22 0M5 23c5 4 17 4 22 0\" fill=\"none\" stroke=\"#ffb7d0\" stroke-width=\"1\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "triangle",
+            "frequency": 170,
+            "duration": 0.45,
+            "gain": 0.07,
+            "endFrequency": 530
+          },
+          {
+            "wave": "sine",
+            "frequency": 400,
+            "duration": 0.25,
+            "gain": 0.045,
+            "endFrequency": 140
+          }
+        ]
+      }
+    }
   },
   {
     "id": "screen-crack",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "sdkVersion": "1.0",
     "name": "Screen Crack",
     "description": "Leave a spiderweb of cracks across the screen.",
@@ -236,7 +848,7 @@ export const catalog: Descriptor[] = [
     "activation": "replace",
     "capabilities": {
       "reducedMotion": true,
-      "audio": false,
+      "audio": true,
       "pause": false
     },
     "lifetime": {
@@ -245,11 +857,147 @@ export const catalog: Descriptor[] = [
       "animationMs": 1000,
       "residueMs": 200
     },
-    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#9ce4fa\"/><stop offset=\"1\" stop-color=\"#4597bd\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"26\" height=\"23\" rx=\"3\" fill=\"#526479\"/><rect x=\"5\" y=\"6\" width=\"22\" height=\"18\" rx=\"1\" fill=\"url(#ICON-g)\"/><path d=\"m7 8 8 6 8-6m-8 6 10 7m-10-7-7 9m7-9 2 9m-2-9-2-6m2 6-9 2m9-2 7 1\" stroke=\"#f2ffff\" stroke-width=\".9\" fill=\"none\"/><path d=\"M12 30h8\" stroke=\"#526479\" stroke-width=\"2\"/></g></svg>\n"
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#9ce4fa\"/><stop offset=\"1\" stop-color=\"#4597bd\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"26\" height=\"23\" rx=\"3\" fill=\"#526479\"/><rect x=\"5\" y=\"6\" width=\"22\" height=\"18\" rx=\"1\" fill=\"url(#ICON-g)\"/><path d=\"m7 8 8 6 8-6m-8 6 10 7m-10-7-7 9m7-9 2 9m-2-9-2-6m2 6-9 2m9-2 7 1\" stroke=\"#f2ffff\" stroke-width=\".9\" fill=\"none\"/><path d=\"M12 30h8\" stroke=\"#526479\" stroke-width=\"2\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 800,
+            "duration": 0.085,
+            "gain": 0.08,
+            "cutoff": 3400
+          },
+          {
+            "wave": "triangle",
+            "frequency": 2300,
+            "duration": 0.16,
+            "gain": 0.025,
+            "endFrequency": 1100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "snowfall",
+    "version": "1.0.0",
+    "sdkVersion": "1.0",
+    "name": "Snowfall",
+    "description": "Let a quiet field of snow drift over the page until stopped.",
+    "category": "Environment",
+    "tags": [
+      "snowfall",
+      "original",
+      "playful"
+    ],
+    "scope": "viewport",
+    "interaction": "automatic",
+    "intensity": "low",
+    "icon": "M6 6h20v20h-20z",
+    "color": "#83b9d3",
+    "source": {
+      "researchId": "candidate-snowfall",
+      "name": "DevBubba collection: Let It Snow",
+      "author": "DevBubba (historical lead, unverified)",
+      "url": "https://devbubba.github.io/Bookmarklets/",
+      "relationship": "Independent implementation of described concept; no source or assets reused",
+      "license": "Project-owned original code, icons and synthesized audio; historical source license unverified"
+    },
+    "enabled": true,
+    "status": "review-pending",
+    "activation": "replace",
+    "capabilities": {
+      "reducedMotion": true,
+      "audio": true,
+      "pause": false
+    },
+    "lifetime": {
+      "class": "continuous",
+      "overlap": "replace",
+      "animationMs": 1000,
+      "residueMs": 0
+    },
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#b5e7f3\"/><stop offset=\"1\" stop-color=\"#76a9d5\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"16\" cy=\"16\" r=\"13\" fill=\"url(#ICON-g)\" stroke=\"none\"/><g fill=\"none\" stroke=\"#fff\" stroke-width=\"1.8\"><path d=\"M16 5v22M6.5 10.5l19 11M6.5 21.5l19-11M12 8l4 4 4-4M12 24l4-4 4 4M7 15l5-1-1-5M25 17l-5 1 1 5M7 17l5 1-1 5M25 15l-5-1 1-5\"/></g></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "sine",
+            "frequency": 620,
+            "endFrequency": 860,
+            "duration": 0.35,
+            "gain": 0.025,
+            "attack": 0.06
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "television-glitch",
+    "version": "1.0.0",
+    "sdkVersion": "1.0",
+    "name": "Television Glitch",
+    "description": "Slip a selected surface into gently displaced television scanlines.",
+    "category": "Transform",
+    "tags": [
+      "television",
+      "original",
+      "playful"
+    ],
+    "scope": "element",
+    "interaction": "click",
+    "intensity": "low",
+    "icon": "M6 6h20v20h-20z",
+    "color": "#ac8cdb",
+    "source": {
+      "researchId": "candidate-television-glitch",
+      "name": "DevBubba collection: Glitch",
+      "author": "DevBubba (historical lead, unverified)",
+      "url": "https://devbubba.github.io/Bookmarklets/",
+      "relationship": "Independent implementation of described concept; no source or assets reused",
+      "license": "Project-owned original code, icons and synthesized audio; historical source license unverified"
+    },
+    "enabled": true,
+    "status": "review-pending",
+    "activation": "replace",
+    "capabilities": {
+      "reducedMotion": true,
+      "audio": true,
+      "pause": false
+    },
+    "lifetime": {
+      "class": "repeatable",
+      "overlap": "replace",
+      "animationMs": 1000,
+      "residueMs": 300
+    },
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#94d5db\"/><stop offset=\"1\" stop-color=\"#bc8bd3\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"6\" width=\"26\" height=\"20\" rx=\"5\" fill=\"#5b536b\"/><rect x=\"6\" y=\"9\" width=\"20\" height=\"13\" rx=\"2\" fill=\"url(#ICON-g)\"/><path d=\"M7 13h7l2-2h8M8 18h5l2 2h9\" fill=\"none\" stroke=\"#f8cedf\" stroke-width=\"2\"/><path d=\"m11 3 5 3 6-4M12 29h8\" fill=\"none\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 150,
+            "duration": 0.14,
+            "gain": 0.045,
+            "cutoff": 1500
+          },
+          {
+            "wave": "triangle",
+            "frequency": 95,
+            "endFrequency": 70,
+            "duration": 0.12,
+            "gain": 0.035
+          }
+        ]
+      }
+    }
   },
   {
     "id": "text-bomb",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "sdkVersion": "1.0",
     "name": "Text Bomb",
     "description": "Plant a tiny bomb. Send the words flying.",
@@ -276,7 +1024,7 @@ export const catalog: Descriptor[] = [
     "activation": "replace",
     "capabilities": {
       "reducedMotion": true,
-      "audio": false,
+      "audio": true,
       "pause": false
     },
     "lifetime": {
@@ -285,11 +1033,50 @@ export const catalog: Descriptor[] = [
       "animationMs": 2600,
       "residueMs": 200
     },
-    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#7f8b9e\"/><stop offset=\"1\" stop-color=\"#283044\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 9c1-7 5-6 7-3\" fill=\"none\" stroke=\"#b77d3a\" stroke-width=\"2\"/><path d=\"m28 2-1 3 4 1m-5 1 2 3\" fill=\"none\" stroke=\"#ffb53d\" stroke-width=\"1.5\"/><path d=\"m16 8 7 2-1 4-7-2z\" fill=\"#42516a\"/><circle cx=\"15\" cy=\"21\" r=\"10\" fill=\"url(#ICON-g)\"/><ellipse cx=\"12\" cy=\"16\" rx=\"4\" ry=\"2.5\" transform=\"rotate(-30 12 16)\" fill=\"#eaf2ff\" opacity=\".6\" stroke=\"none\"/></g></svg>\n"
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#7f8b9e\"/><stop offset=\"1\" stop-color=\"#283044\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 9c1-7 5-6 7-3\" fill=\"none\" stroke=\"#b77d3a\" stroke-width=\"2\"/><path d=\"m28 2-1 3 4 1m-5 1 2 3\" fill=\"none\" stroke=\"#ffb53d\" stroke-width=\"1.5\"/><path d=\"m16 8 7 2-1 4-7-2z\" fill=\"#42516a\"/><circle cx=\"15\" cy=\"21\" r=\"10\" fill=\"url(#ICON-g)\"/><ellipse cx=\"12\" cy=\"16\" rx=\"4\" ry=\"2.5\" transform=\"rotate(-30 12 16)\" fill=\"#eaf2ff\" opacity=\".6\" stroke=\"none\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "sine",
+            "frequency": 310,
+            "duration": 0.075,
+            "gain": 0.035,
+            "endFrequency": 180
+          }
+        ]
+      },
+      "detonate": {
+        "layers": [
+          {
+            "wave": "sine",
+            "frequency": 125,
+            "duration": 0.3,
+            "gain": 0.13,
+            "endFrequency": 38
+          },
+          {
+            "wave": "noise",
+            "frequency": 150,
+            "duration": 0.23,
+            "gain": 0.09,
+            "cutoff": 1500
+          },
+          {
+            "wave": "noise",
+            "frequency": 1600,
+            "duration": 0.13,
+            "gain": 0.025,
+            "delay": 0.1,
+            "cutoff": 2900
+          }
+        ]
+      }
+    }
   },
   {
     "id": "vortex",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "sdkVersion": "1.0",
     "name": "Vortex",
     "description": "Fold a piece of the internet into a tiny black hole.",
@@ -316,7 +1103,7 @@ export const catalog: Descriptor[] = [
     "activation": "replace",
     "capabilities": {
       "reducedMotion": true,
-      "audio": false,
+      "audio": true,
       "pause": false
     },
     "lifetime": {
@@ -325,6 +1112,99 @@ export const catalog: Descriptor[] = [
       "animationMs": 1800,
       "residueMs": 200
     },
-    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#c5b1ff\"/><stop offset=\"1\" stop-color=\"#7550ca\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"16\" cy=\"16\" r=\"13\" fill=\"#eee6ff\" stroke=\"none\"/><path d=\"M28 13C25 1 5 0 3 15c-2 16 20 20 25 5C32 8 14 3 9 12c-6 10 9 15 13 7 3-6-6-10-8-5-1 3 4 5 5 2\" fill=\"none\" stroke=\"url(#ICON-g)\" stroke-width=\"3.5\"/><circle cx=\"17\" cy=\"16\" r=\"3\" fill=\"#584181\" stroke=\"none\"/></g></svg>\n"
+    "iconSvg": "<svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\".7\" y2=\"1\"><stop stop-color=\"#c5b1ff\"/><stop offset=\"1\" stop-color=\"#7550ca\"/></linearGradient></defs><g stroke=\"#344559\" stroke-width=\".7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"16\" cy=\"16\" r=\"13\" fill=\"#eee6ff\" stroke=\"none\"/><path d=\"M28 13C25 1 5 0 3 15c-2 16 20 20 25 5C32 8 14 3 9 12c-6 10 9 15 13 7 3-6-6-10-8-5-1 3 4 5 5 2\" fill=\"none\" stroke=\"url(#ICON-g)\" stroke-width=\"3.5\"/><circle cx=\"17\" cy=\"16\" r=\"3\" fill=\"#584181\" stroke=\"none\"/></g></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 300,
+            "duration": 1,
+            "gain": 0.055,
+            "cutoff": 650,
+            "attack": 0.2
+          },
+          {
+            "wave": "sine",
+            "frequency": 110,
+            "duration": 0.8,
+            "gain": 0.028,
+            "endFrequency": 240,
+            "attack": 0.15
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "wrecking-ball",
+    "version": "1.0.0",
+    "sdkVersion": "1.0",
+    "name": "Wrecking Ball",
+    "description": "Swing a steel pendulum into a selected surface.",
+    "category": "Impact",
+    "tags": [
+      "wrecking",
+      "playful"
+    ],
+    "scope": "element",
+    "interaction": "click",
+    "intensity": "medium",
+    "icon": "M4 5h24v23H4z",
+    "color": "#94a3b8",
+    "source": {
+      "researchId": "cr004-wrecking-ball",
+      "name": "Web Pranks",
+      "author": "steveja42",
+      "url": "https://github.com/steveja42/webpranks",
+      "relationship": "Independently reconstructed behavioral inspiration; no source or assets reused",
+      "license": "Project-owned implementation, icon and procedural audio; original source license not relied upon"
+    },
+    "enabled": true,
+    "status": "review-pending",
+    "activation": "replace",
+    "capabilities": {
+      "reducedMotion": true,
+      "audio": true,
+      "pause": false
+    },
+    "lifetime": {
+      "overlap": "replace",
+      "animationMs": 1800,
+      "residueMs": 0,
+      "class": "repeatable"
+    },
+    "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\"><defs><linearGradient id=\"ICON-g\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop stop-color=\"#c7d3e5\"/><stop offset=\"1\" stop-color=\"#45556e\"/></linearGradient></defs><path d=\"M22 2 12 14\" stroke=\"#76849b\" stroke-width=\"3\"/><circle cx=\"12\" cy=\"21\" r=\"10\" fill=\"url(#ICON-g)\"/><path d=\"m7 17 4-3\" stroke=\"#f2f6ff\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>\n",
+    "audioProfile": {
+      "activate": {
+        "layers": [
+          {
+            "wave": "noise",
+            "frequency": 350,
+            "cutoff": 800,
+            "duration": 0.18,
+            "gain": 0.03
+          }
+        ]
+      },
+      "impact": {
+        "layers": [
+          {
+            "wave": "sine",
+            "frequency": 110,
+            "endFrequency": 42,
+            "duration": 0.35,
+            "gain": 0.13
+          },
+          {
+            "wave": "noise",
+            "frequency": 700,
+            "cutoff": 1300,
+            "duration": 0.17,
+            "gain": 0.07
+          }
+        ]
+      }
+    }
   }
 ];

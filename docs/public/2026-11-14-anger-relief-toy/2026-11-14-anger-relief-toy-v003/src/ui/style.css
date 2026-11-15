@@ -417,6 +417,11 @@ summary {
 }
 .sector-name {
   max-width: 88px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
   font-size: 14px;
   font-weight: 550;
   line-height: 1.15;
@@ -466,11 +471,13 @@ summary {
   bottom: 20px;
   transform: translateX(-50%);
   z-index: 30;
-  display: flex;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 76px 98px 90px;
   align-items: center;
-  gap: 12px;
-  max-width: calc(100vw - 24px);
-  padding: 9px 12px;
+  gap: 10px;
+  width: min(640px, calc(100vw - 24px));
+  height: 72px;
+  padding: 10px 12px;
   border: 1px solid #fff;
   border-radius: 20px;
   background: var(--glass);
@@ -487,32 +494,105 @@ summary {
   place-items: center;
   width: 44px;
   height: 44px;
-  flex-shrink: 0;
 }
 .hud-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 120px;
-  max-width: 280px;
+  min-width: 0;
+  overflow: hidden;
 }
 .hud-name {
+  display: block;
   font-size: 16px;
   font-weight: 600;
-}
-.hud-status {
-  color: var(--muted);
-  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .hud button {
-  padding: 9px 11px;
+  height: 40px;
+  width: 100%;
+  padding: 8px 4px;
   border: 1px solid var(--line);
   border-radius: 10px;
   white-space: nowrap;
   background: #fff7;
 }
-.hud .put-away {
-  margin-left: 0;
+.hud button:disabled {
+  opacity: 0.42;
+  cursor: default;
+  background: #e5ecef55;
+}
+.audio-control {
+  position: fixed;
+  right: 14px;
+  bottom: 100px;
+  z-index: 30;
+  pointer-events: auto;
+}
+.mute-audio {
+  min-width: 68px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: 18px;
+  border: 1px solid #fff;
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 12px #263c5017;
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 106px;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  z-index: 35;
+  box-shadow: var(--shadow);
+  font: 14px/1.4 system-ui;
+}
+.dial-mask,
+.dial-rotor {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+.dial-mask {
+  mask-image: conic-gradient(#000 0deg 291deg, transparent 291deg 339deg, #000 339deg 360deg);
+}
+.dial-rotor {
+  will-change: transform;
+}
+.dial-separator {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(1px 3px 3px #243b462e);
+}
+.dial-separator svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.wheel {
+  touch-action: none;
+  user-select: none;
+}
+.wheel-sector {
+  touch-action: none;
+  cursor: grab;
+}
+.wheel-sector:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.wheel-center {
+  z-index: 3;
+}
+.quick-settings {
+  margin-bottom: 16px;
 }
 .cursor-cue {
   position: fixed;
@@ -527,13 +607,6 @@ summary {
   border: 1px solid #ffffffd9;
   backdrop-filter: blur(9px);
   box-shadow: 0 3px 12px #243d4f14;
-}
-.capture {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  pointer-events: auto;
-  cursor: crosshair;
 }
 .highlight {
   position: fixed;
@@ -559,24 +632,13 @@ summary {
     padding: 16px;
   }
   .hud {
-    gap: 8px;
+    grid-template-columns: 36px minmax(0, 1fr) 70px 88px 80px;
+    gap: 6px;
     padding: 8px;
     bottom: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .hud-copy {
-    min-width: 80px;
-    max-width: 180px;
-  }
-  .hud-status {
-    display: none;
   }
   .hud-icon {
     width: 36px;
-  }
-  .hud button {
-    padding: 8px;
   }
   .toolbar {
     flex-wrap: wrap;
@@ -647,5 +709,36 @@ summary {
   .wheel {
     border: 1px solid CanvasText;
     box-shadow: none;
+  }
+}
+
+@media (max-width: 460px) {
+  .hud {
+    height: 106px;
+    grid-template-columns: 38px minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 36px 40px;
+    gap: 8px;
+    width: calc(100vw - 16px);
+  }
+  .hud-copy {
+    grid-column: 2/4;
+  }
+  .hud-switch {
+    grid-column: 1;
+  }
+  .hud button {
+    font-size: 14px;
+  }
+  .hud-switch {
+    min-width: 0;
+  }
+  .hud {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .audio-control {
+    bottom: 128px;
+  }
+  .toast {
+    bottom: 174px;
   }
 }

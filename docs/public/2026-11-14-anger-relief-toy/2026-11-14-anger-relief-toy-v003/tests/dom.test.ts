@@ -57,6 +57,9 @@ beforeAll(() => {
           get: (_t, key) =>
             [
               "fillRect",
+              "clearRect",
+              "arc",
+              "fill",
               "fillText",
               "drawImage",
               "beginPath",
@@ -137,7 +140,12 @@ for (const descriptor of catalog) {
         expect((overlay.firstElementChild as HTMLElement).style.background).toContain(
           "radial-gradient",
         );
-      if (descriptor.scope === "element") expect(target.style.visibility).toBe("hidden");
+      if (
+        descriptor.scope === "element" &&
+        descriptor.id !== "color-splash" &&
+        descriptor.id !== "celebration-cannon"
+      )
+        expect(target.style.visibility).toBe("hidden");
       if (descriptor.id === "vortex") expect(animations[0]!.frames.at(-1)!.opacity).toBe(0);
       if (descriptor.id === "rubber-band") expect(animations[0]!.frames.length).toBe(6);
       if (descriptor.id === "gravity-collapse" && cycle !== 1) {

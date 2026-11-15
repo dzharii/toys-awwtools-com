@@ -29,7 +29,7 @@ export class Diagnostics {
       event,
       effectId,
       effectVersion: this.version(effectId),
-      runtimeVersion: "0.2.0",
+      runtimeVersion: "0.3.0",
       correlationId: this.correlation,
       durationMs: Math.round(durationMs),
     });

@@ -7,6 +7,7 @@ import type {
   StopReason,
 } from "../sdk/types";
 import { Resources } from "../sdk/resources";
+import { AudioService } from "../audio/service";
 import { Diagnostics } from "./diagnostics";
 export type InvocationState = "idle" | "starting" | "playing" | "continuous" | "failed";
 /** Owns only an execution. Completing it never unequips its tool or dismisses navigation. */
@@ -23,6 +24,7 @@ export class Invocations {
     private inputAllowed: () => boolean,
     private changed: () => void,
     private diagnostics: Diagnostics,
+    private audio?: AudioService,
   ) {}
   get resources(): number {
     return this.scope?.size ?? 0;
@@ -69,7 +71,11 @@ export class Invocations {
     this.started++;
     this.diagnostics.write("effect.start.started", d.id);
     try {
+      const audio = d.audioProfile ? this.audio?.scope(d.audioProfile) : undefined;
+      if (audio) r.own(() => audio.stop());
+      audio?.play("activate");
       this.instance = module.create({
+        audio,
         document: target.document,
         signal: this.abort.signal,
         resources: r,

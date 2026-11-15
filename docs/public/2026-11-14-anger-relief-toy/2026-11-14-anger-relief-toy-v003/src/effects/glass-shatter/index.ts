@@ -9,6 +9,7 @@ export default {
       if (target.kind !== "element") throw new Error("TARGET_KIND");
       const rect = target.element.getBoundingClientRect();
       const source = snapshot(target.element, c);
+      c.audio?.play("scatter", { delay: 0.07 });
       const rng = random(93);
       const cx = Math.max(10, Math.min(90, ((target.x - rect.left) / rect.width) * 100));
       const cy = Math.max(10, Math.min(90, ((target.y - rect.top) / rect.height) * 100));

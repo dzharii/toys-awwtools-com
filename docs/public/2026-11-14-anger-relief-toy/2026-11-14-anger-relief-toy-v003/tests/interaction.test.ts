@@ -1,35 +1,6 @@
 import { test, expect } from "bun:test";
-import { CircleGesture } from "../src/experimental/circle-gesture";
 import { clampPanel, cursorPosition } from "../src/ui/position";
 import { sectorPolygon } from "../src/ui/wheel";
-test("gesture requires deliberate, sustained circles; clicks, lines and interruptions do not qualify", () => {
-  const gesture = new CircleGesture();
-  let progress = 0;
-  for (let i = 0; i <= 100; i++) {
-    const angle = (i / 100) * Math.PI * 4.2;
-    progress = gesture.add({
-      x: 100 + 45 * Math.cos(angle),
-      y: 100 + 45 * Math.sin(angle),
-      t: i * 25,
-    });
-  }
-  expect(progress).toBe(1);
-  gesture.reset();
-  for (let i = 0; i < 100; i++) expect(gesture.add({ x: i, y: i, t: i * 25 })).toBe(0);
-  gesture.reset();
-  expect(gesture.add({ x: 100, y: 100, t: 0 })).toBe(0);
-  expect(gesture.add({ x: 100, y: 100, t: 2500 })).toBe(0);
-  gesture.reset();
-  for (let i = 0; i <= 100; i++) {
-    const angle = (i / 100) * Math.PI * 5;
-    progress = gesture.add({
-      x: 100 + 5 * Math.cos(angle),
-      y: 100 + 5 * Math.sin(angle),
-      t: i * 25,
-    });
-  }
-  expect(progress).toBe(0);
-});
 test("dialog and cursor positions keep controls accessible at boundaries", () => {
   expect(clampPanel({ x: -500, y: 999 }, 700, 600, { width: 920, height: 720 })).toEqual({
     x: 8,

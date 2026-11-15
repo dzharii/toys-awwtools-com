@@ -37,6 +37,12 @@ async function handle(message: unknown, sender: chrome.runtime.MessageSender): P
     });
     return { ok: true };
   }
+  if (message.type === "preferences-changed") {
+    try {
+      await chrome.tabs.sendMessage(tabId, { type: "preferences-changed" });
+    } catch {}
+    return { ok: true };
+  }
   if (message.type === "stop") {
     try {
       await chrome.tabs.sendMessage(tabId, { type: "stop" });
@@ -77,6 +83,7 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, respond) => {
   if (
     !record(message) ||
     ![
+      "preferences-changed",
       "load",
       "launch",
       "wheel",

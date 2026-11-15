@@ -1,11 +1,14 @@
 import { catalog } from "../generated/catalog";
 import { defaults, options, record } from "../sdk/validation";
+import type { AudioPreferences } from "../sdk/audio-types";
 import type { Options } from "../sdk/types";
 import { el, button, closeButton, icon } from "./dom";
 export interface Preferences {
   favorites: string[];
   recent: string[];
   options: Options;
+  audio: AudioPreferences;
+  middleHold: boolean;
 }
 export async function preferences(): Promise<Preferences> {
   let data: Record<string, unknown> = {};
@@ -21,7 +24,18 @@ export async function preferences(): Promise<Preferences> {
           .filter((id): id is string => typeof id === "string" && catalog.some((e) => e.id === id))
           .slice(0, 32)
       : [];
+  const audio = record(value.audio) ? value.audio : {};
   return {
+    audio: {
+      muted: audio.muted === true,
+      volume:
+        typeof audio.volume === "number" && Number.isFinite(audio.volume)
+          ? Math.max(0, Math.min(1, audio.volume))
+          : 0.2,
+      effects: audio.effects !== false,
+      navigation: audio.navigation !== false,
+    },
+    middleHold: value.middleHold === true,
     favorites: Array.isArray(value.favorites)
       ? ids(value.favorites)
       : catalog.slice(0, 4).map((e) => e.id),
@@ -34,6 +48,7 @@ export async function mountCatalog(
   launch: (id: string, o: Options) => Promise<void>,
   commands: {
     wheel?: () => void;
+    changed?: () => void;
     close?: () => void;
     stop: () => void;
     diagnostics: () => Promise<unknown>;
@@ -94,6 +109,59 @@ export async function mountCatalog(
   };
   toolbar.append(search, filter);
   root.append(toolbar);
+  const soundSettings = el("details", "settings quick-settings");
+  soundSettings.append(el("summary", "", "Sound and mouse shortcut"));
+  const soundFields = el("div", "settings-grid");
+  for (const [text, key] of [
+    ["Mute all sounds", "muted"],
+    ["Effect sounds", "effects"],
+    ["Dial sounds", "navigation"],
+  ] as const) {
+    const label = el("label", "motion");
+    const check = el("input");
+    check.type = "checkbox";
+    check.checked = prefs.audio[key];
+    check.onchange = () => {
+      prefs.audio[key] = check.checked;
+      void save();
+    };
+    label.append(check, document.createTextNode(text));
+    soundFields.append(label);
+  }
+  const volumeLabel = el("label");
+  const volumeText = el("span", "", `Volume: ${Math.round(prefs.audio.volume * 100)}%`);
+  const volume = el("input");
+  volume.type = "range";
+  volume.min = "0";
+  volume.max = "100";
+  volume.value = String(prefs.audio.volume * 100);
+  volume.oninput = () => {
+    prefs.audio.volume = Number(volume.value) / 100;
+    volumeText.textContent = `Volume: ${volume.value}%`;
+    void save();
+  };
+  volumeLabel.append(volumeText, volume);
+  soundFields.append(volumeLabel);
+  const holdLabel = el("label", "motion");
+  const hold = el("input");
+  hold.type = "checkbox";
+  hold.checked = prefs.middleHold;
+  hold.onchange = () => {
+    prefs.middleHold = hold.checked;
+    void save();
+  };
+  holdLabel.append(hold, document.createTextNode("Middle mouse hold opens dial"));
+  soundFields.append(holdLabel);
+  soundFields.append(
+    el(
+      "p",
+      "help",
+      "Hold for 1.8 seconds on noninteractive page areas after activating the extension in this tab. Replaces middle-button autoscroll or paste on those areas while enabled. Links, fields and controls keep their normal behavior.",
+    ),
+  );
+  soundSettings.append(soundFields);
+  root.append(soundSettings);
+
   const tabs = el("nav", "tabs");
   tabs.setAttribute("aria-label", "Tool collection");
   for (const name of ["All tools", "Favorites", "Recent"]) {
@@ -113,6 +181,8 @@ export async function mountCatalog(
   async function save(): Promise<void> {
     try {
       await chrome.storage.local.set({ preferences: prefs });
+      commands.changed?.();
+      void chrome.runtime.sendMessage({ type: "preferences-changed" }).catch(() => {});
     } catch {
       status.textContent = "Could not save preferences. Try again after freeing extension storage.";
     }
@@ -241,7 +311,7 @@ export async function mountCatalog(
     el(
       "p",
       "help",
-      "Equip a tool, then click elements repeatedly. Tab cycles targets and controls; Enter uses a target. Escape closes an open menu, otherwise puts the tool away. Continuous effects last until ended. Form fields and embedded content are protected.",
+      "Equip a tool, then click elements repeatedly. Document and viewport tools start when equipped; reselect to restart after End effect. Escape closes the open menu, otherwise puts the tool away. Form fields and embedded content are protected.",
     ),
   );
   details.append(
@@ -249,6 +319,8 @@ export async function mountCatalog(
       "Reset preferences",
       () => {
         prefs.options = { ...defaults };
+        prefs.audio = { muted: false, volume: 0.2, effects: true, navigation: true };
+        prefs.middleHold = false;
         prefs.favorites = catalog.slice(0, 4).map((e) => e.id);
         prefs.recent = [];
         void save().then(() => mountCatalog(root, launch, commands));

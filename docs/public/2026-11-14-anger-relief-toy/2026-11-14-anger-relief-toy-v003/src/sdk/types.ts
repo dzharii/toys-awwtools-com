@@ -13,6 +13,7 @@ export interface Descriptor {
   intensity: "low" | "medium";
   icon: string;
   color: string;
+  audioProfile?: import("./audio-types").AudioProfile;
   iconSvg?: string;
   lifetime: {
     class: "repeatable" | "continuous" | "simulation" | "persistent";
@@ -31,7 +32,7 @@ export interface Descriptor {
   enabled: boolean;
   status: "review-pending" | "verified";
   activation: "replace";
-  capabilities: { reducedMotion: true; audio: false; pause: false };
+  capabilities: { reducedMotion: true; audio: boolean; pause: false };
 }
 export interface Options {
   strength: number;
@@ -51,6 +52,7 @@ export interface EffectContext {
   signal: AbortSignal;
   resources: import("./resources").Resources;
   overlay: HTMLElement;
+  audio?: import("./audio-types").EffectAudio;
   finish(): void;
   inputAllowed?(): boolean;
 }

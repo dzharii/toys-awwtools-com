@@ -8,6 +8,7 @@ export default {
       if (target.kind !== "element") throw new Error("TARGET_KIND");
       const surface = snapshot(target.element, c);
       c.resources.style(target.element, "visibility", "hidden");
+      c.audio?.play("impact", { delay: o.reducedMotion ? 0 : 0.075 });
       const mark = layer(c);
       mark.textContent = "POW!";
       Object.assign(mark.style, {

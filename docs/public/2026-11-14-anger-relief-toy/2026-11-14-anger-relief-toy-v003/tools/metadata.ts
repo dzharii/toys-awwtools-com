@@ -49,7 +49,7 @@ export function validateDescriptor(
     value.activation !== "replace" ||
     !record(value.capabilities) ||
     value.capabilities.reducedMotion !== true ||
-    value.capabilities.audio !== false ||
+    typeof value.capabilities.audio !== "boolean" ||
     value.capabilities.pause !== false
   )
     throw new Error("Invalid capabilities");
@@ -59,4 +59,38 @@ export function validateDescriptor(
     !["low", "medium"].includes(String(value.intensity))
   )
     throw new Error("Invalid status");
+}
+
+export function validateAudio(
+  value: unknown,
+): asserts value is import("../src/sdk/audio-types").AudioProfile {
+  if (!record(value) || !record(value.activate) || Object.keys(value).length > 12)
+    throw new Error("Invalid audio profile");
+  for (const [name, cue] of Object.entries(value)) {
+    if (
+      !/^[a-z-]+$/.test(name) ||
+      !record(cue) ||
+      !Array.isArray(cue.layers) ||
+      !cue.layers.length ||
+      cue.layers.length > 6
+    )
+      throw new Error("Invalid sound cue");
+    for (const l of cue.layers) {
+      if (!record(l) || !["noise", "sine", "triangle", "square"].includes(String(l.wave)))
+        throw new Error("Invalid sound layer");
+      for (const [key, min, max] of [
+        ["frequency", 20, 18000],
+        ["endFrequency", 20, 18000],
+        ["duration", 0.005, 1.5],
+        ["gain", 0, 0.18],
+        ["attack", 0.001, 0.3],
+        ["delay", 0, 2],
+        ["cutoff", 40, 16000],
+      ] as const) {
+        if (l[key] === undefined && !["frequency", "duration", "gain"].includes(key)) continue;
+        if (typeof l[key] !== "number" || !Number.isFinite(l[key]) || l[key] < min || l[key] > max)
+          throw new Error(`Invalid sound ${key}`);
+      }
+    }
+  }
 }

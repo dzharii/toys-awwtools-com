@@ -1,45 +1,27 @@
-# Anger Relief Toy 0.2.0
+# Anger Relief Toy 0.3.0
 
-A Manifest V3 extension for Edge and Chrome. Equip a playful tool, use it repeatedly on a webpage, switch through the action wheel, and put it away to restore ordinary browsing. Eight effects, no production dependencies or remote scripts.
+A Manifest V3 extension for Microsoft Edge and Google Chrome. Equip a tool, play with webpage elements repeatedly, browse the rotating action dial, and put the tool away. The collection contains 18 independently loaded effects, including ten new effects. No external runtime dependencies, remotely executable code, telemetry, or persistent host permissions are added.
 
-## Load the build
+Extract the archive, open `chrome://extensions` or `edge://extensions`, enable Developer mode, select **Load unpacked**, and choose `dist`. Reload the extension and refresh existing test tabs when updating. The included `anger-relief-toy-extension.zip` contains the same loadable build.
 
-Extract the project archive. In `chrome://extensions` or `edge://extensions`, enable Developer mode, choose **Load unpacked**, and select the project's `dist` folder containing `manifest.json`. When updating an existing unpacked installation, reload the extension and refresh already-open test pages.
+Open the toolbar popup to search tools or open the dial. The UI reports the actual assigned shortcut using the Commands API. Alt+Shift+A is suggested; if unassigned, configure Open rotating action dial under the browser's extension keyboard shortcuts.
 
-Click the extension toolbar icon to browse tools. **Open action wheel** displays the actual browser-assigned shortcut, not merely the suggested Alt+Shift+A binding. If unassigned, use the browser's Extensions > Keyboard shortcuts page to assign Open action wheel. Browser-controlled shortcuts can take precedence over the suggested binding.
+The inventory always shows the tool icon, name, and **Switch | End effect | Put away**. End effect remains present and disabled while idle. It ends the current animation without unequipping. Put away cleans up the session. Repeatable tools remain ready after each animation. Document and viewport tools start when equipped; reselect one to restart after End effect. There is no fourth control or permanent status caption.
 
-## Use tools continuously
+Drag the dial around its circumference to browse in either direction. Nine physical positions support approximately eight visible tools, with identities recycled beneath the fixed upper-left cover. Release to settle into a detent. Arrow keys browse the full collection, Enter selects, and Tab reaches the center and other dialog controls. All tools opens the centered, draggable searchable catalog. Search, categories, Favorites, Recent, settings, credits and diagnostics are preserved. Escape closes the topmost menu, otherwise puts away the tool.
 
-Equipping Punch, Shatter, Text Bomb, Rubber, or Vortex keeps it ready after each animation. Click another element directly; there is no Again button. Rapid actions replace the previous invocation, so only one animation owns resources at once.
+Element tools use deliberate primary-pointer clicks. The extension no longer cycles webpage targets with Tab or invokes them with Enter. Ordinary keyboard activation and native middle-click links remain available. Primary targeting is intercepted in capture listeners; earlier host-window listeners cannot be retroactively undone. Form values and editable surfaces are excluded from visual capture.
 
-Flashlight stays active until ended, switched, or put away. It follows the pointer and supports arrow keys. Gravity and Screen Crack likewise have no short automatic timeout. Gravity uses up to twelve visible target illustrations and floor bounces, while Screen Crack is a temporary viewport overlay.
+Sound uses one lazily initialized Web Audio context per authorized document. Original local synthesis supplies material-specific profiles, with 20% initial master volume, mute, volume, effect-sound and dial-sound preferences. A separate Mute control remains available while equipped. Audio follows browser user-activation policies; if unavailable or suspended, visuals continue. A popup-to-content message is not treated as permission to bypass autoplay restrictions. No audio plays merely on page load.
 
-The bottom inventory shows your tool and provides **Switch**, **End effect**, and **Put away**. End effect stops the current visual result while keeping the tool selected. **Use tool** restarts a selected non-element mode after it has ended. Put away releases equipment, effects, target interception and cursor feedback. One-shot restore time applies to individual repeatable invocations only.
+Enable **Middle mouse hold opens dial** under **Sound and mouse shortcut** to use the optional 1.8-second stationary hold. It is disabled initially and works only after activation/injection in the current tab. Eligible noninteractive presses replace native middle-button autoscroll or paste while enabled. Links, fields, controls and extension menus are excluded. Releasing early, moving more than 12 pixels, losing focus, hiding the page or putting away cancels progress. No Shift or circular movement is required. The keyboard shortcut remains the reliable alternative.
 
-The wheel and full catalog preserve equipment when closed. Escape closes an open menu first; otherwise it puts away the tool. All tools opens a centered catalog. Drag its title bar to move it; focus that title bar and use arrow keys for a keyboard alternative. The native toolbar popup stays browser-positioned.
+The new tools are Wrecking Ball, Burn the Page, Disintegrate, Page Dance, Celebration Cannon, Depth Page, Television Glitch, Color Splash, Snowfall and Matrix Rain. They accompany Punch, Shatter, Gravity, Rubber, Screen Crack, Text Bomb, Vortex and Flashlight. Research covers 20 candidates, with ten deferred rather than exposed as incomplete tools.
 
-Tab cycles eligible targets and inventory controls; Enter uses the selected target. The wheel supports Tab and arrow navigation. System reduced motion always applies. Form values, editable drafts, embedded frames, audio/video and canvas contents are protected from capture.
+Use Bun 1.4.4: `bun install --frozen-lockfile`, `bun run build`, `bun run check`, and `bun test`. `bun run package` validates and creates the extension-only ZIP. `bun run audition` builds `evidence/004/audio-audition/index.html`, a development review surface using the actual shared audio service, including repeated playback and native OfflineAudioContext metrics. `bun run test:browser` builds and attempts the actual packaged extension using installed Playwright/Chromium. `CHROMIUM_EXECUTABLE` and `HEADED=1` select an installed browser and headed mode. No browser download is automatic.
 
-Scrolling, resizing or a changing target may end a snapshot animation without losing selection. Viewport effects adapt without being unequipped. Hidden tabs suspend active work; returning restores continuous pointer modes or leaves repeatable tools ready. Full navigation, refresh and route changes end the document session.
+The supplied build is functional development output for review. `bun run build:release` rejects effects still marked review-pending. Current native Chromium startup fails at `process_singleton_posix.cc:297`, `socket() failed: Operation not permitted (1)`. Consequently native layout measurements, screenshots, motion, branded browser/OS gesture compatibility, actual audio output, listening comfort and hardware profiling are not claimed as verified. Component checks, strict types and builds are separate evidence. The complete specification, all 88 review answers, per-feature acceptance records, source hashes, design alternatives and exact blocker are included.
 
-## Build and test
+Effects render bounded local illustrations of backgrounds and text, not pixel-perfect screenshots. Images, complex CSS, live canvas/video and embedded applications are not reproduced. No original third-party scripts or artwork were copied or executed. Unknown upstream revisions and rights remain explicitly recorded. Existing specifications and reference assets remain unchanged.
 
-Use Bun 1.4.4, the tested version. Run `bun install --frozen-lockfile`, `bun run build`, `bun run check`, and `bun run test`. `bun run package` produces `anger-relief-toy-extension.zip` with only the loadable extension files. Development dependencies are pinned in `bun.lock`; none enter the shipped runtime.
-
-`bun run test:browser` uses an installed Playwright browser or `/usr/bin/chromium`, with `CHROMIUM_EXECUTABLE` and `HEADED=1` overrides. It does not download a browser automatically. The suite loads the unchanged packaged extension and exercises the actual shortcut, repeated Punch/Text Bomb, ten-second Flashlight, centered/dragged catalog, menu preservation, reduced motion, host controls, scroll/resize and refresh at 920x720 and 1440x1000. It captures screenshots and video when native Chromium can run.
-
-Synthetic fixtures include `tests/fixtures/discussion.html` and the earlier message playground. Serve them over localhost for normal activeTab testing. File URLs require the browser's separate Allow access to file URLs extension setting.
-
-The optional circle gesture is a development-only experiment. `bun run prototype:gesture` creates `.temp/gesture-prototype/index.html`. Its explicit opt-in uses Shift+middle on noninteractive space and captures native autoscroll for that gesture. No gesture listeners, production toggle, persistent host permission, or global page injection are shipped. Native browser interference must be validated before integration.
-
-## Design and verification status
-
-The redesign uses a light translucent radial control and colored, softly shaded object icons, following the user's feedback during five image-generation concepts/refinements. Source artwork and concept references are included in the change request's companion assets folder. The functional controls are DOM/SVG/CSS, not a flattened mockup.
-
-Type checks, builds and component tests pass. The current environment was checked again: Chromium still fails at process socket creation. Native browser screenshots, actual keybinding behavior, visual/motion comparison, hardware performance and branded Edge/Chrome compatibility remain unverified. Generated concepts and the icon contact sheet are explicitly not browser evidence. The implementation is delivered for review; the change request is not marked finally accepted while those gates remain open.
-
-See [interaction semantics](docs/interaction-003.md), [design decision](.specs/suggestions003-00-change-request-interaction-navigation-and-visual-redesign.assets/design-exploration/decision.md), [copy audit](docs/copy-audit-003.md), [verification](docs/verification.md), and [acceptance index](docs/acceptance-index.md).
-
-## Rendering limits
-
-Effects use bounded local illustrations of target backgrounds/text, not pixel-perfect screenshots. External images, complex CSS, canvas/video and embedded applications are not reproduced. Snapshot canvases use CSS-pixel resolution. The extension restores only the visibility property it owns; a concurrent same-value host write cannot be distinguished from extension ownership. Complex host stacking/top-layer content and high-DPI rendering still require native compatibility review. No effect modifies server-side data or intentionally sends a host action.
+See [implementation](docs/interaction-004.md), [verification](docs/verification.md), [acceptance records](docs/acceptance-index.md), and [adding tools](docs/adding-effects.md).

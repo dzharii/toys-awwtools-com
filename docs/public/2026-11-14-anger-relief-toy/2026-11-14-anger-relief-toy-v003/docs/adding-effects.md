@@ -18,4 +18,14 @@ Every new effect manifest must declare lifetime.class (repeatable, continuous, s
 
 Supply a feature-local icon.svg containing only approved static SVG shapes/gradients. The build validates and embeds it into generated descriptors; shared icon rendering gives gradient IDs unique names. Reuse that same artwork across catalog, wheel, inventory and pointer cue. No separate manually maintained icon list or copied third-party asset is needed.
 
-Component tests should assert that invocation completion leaves the equipped state ready, that switching and Put away clear all owned scopes, and that continuous modes have no generic lifetime timer. Add corresponding native browser evidence before verified status. The development gesture prototype is not an approved production extension point.
+Component tests should assert that invocation completion leaves the equipped state ready, that switching and Put away clear all owned scopes, and that continuous modes have no generic lifetime timer. Add corresponding native browser evidence before verified status. The historical gesture prototype was superseded by the shared production hold service in change request004.
+
+## Audio and dial integration after change request 004
+
+Supply audio.json with an activate cue and optionally named impact, detonate, collision or other cues. Each cue has one to six layers with wave (noise/sine/triangle/square), frequency, duration, gain and optional endFrequency/attack/delay/cutoff. See sdk/audio-types.ts and tools/metadata.ts for bounds. Set capabilities.audio=true. Profiles and editable icon.svg are validated and embedded by the build. No manual audio controller or dial edit is needed.
+
+The invocation controller issues activate automatically. Use context.audio?.play("impact", {delay: .1, strength: .7}) for a meaningful later event, aligned with the animation, and let the invocation scope stop it. Do not create AudioContext, HTMLAudioElement, unmanaged sources, network requests or private global engines. Prefer quiet, brief, material-specific sounds. Document sources and repeated-use listening review; source inspection alone cannot approve sound quality. The development audition tool uses the actual shared service and profile, including native offline rendering.
+
+The rotating dial uses every enabled registry entry with at most nine physical slots and no effect imports. Titles/icons/profiles remain feature-owned. Reselecting a stopped document/viewport tool starts a fresh invocation. Never add a fourth HUD button or permanent status caption. Normal Tab/Enter webpage targeting is removed. Keyboard-accessible extension controls remain mandatory. The obsolete circular gesture prototype was removed; production MiddleHold is a shared opt-in service, not an effect extension point.
+
+`bun run build` produces a development-review build containing enabled effects. `bun run build:release` additionally requires verified status. Keep review-pending until native visual/audio/compatibility, provenance and independent acceptance gates have actual evidence.

@@ -32,6 +32,18 @@ export default {
         (event) => {
           if (c.inputAllowed && !c.inputAllowed()) return;
           const e = event as KeyboardEvent;
+          if (
+            e
+              .composedPath()
+              .some(
+                (node) =>
+                  node instanceof Element &&
+                  node.matches(
+                    "input,textarea,select,[contenteditable]:not([contenteditable=false]),[data-art-root]",
+                  ),
+              )
+          )
+            return;
           if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
           e.preventDefault();
           e.stopImmediatePropagation();

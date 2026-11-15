@@ -3,7 +3,7 @@ import { join } from "node:path";
 /** Conservative source guardrails, supplementary to independent manual review. */
 export function validateFeatureSource(code: string, path: string): void {
   if (
-    /\b(?:eval|Function|fetch|XMLHttpRequest|WebSocket|sendBeacon)\s*\(|\b(?:chrome|browser)\s*[.[]|\.innerHTML\s*=|\b(?:localStorage|sessionStorage)\b|document\.cookie|dispatchEvent\s*\(/.test(
+    /\b(?:eval|Function|fetch|XMLHttpRequest|WebSocket|sendBeacon)\s*\(|\b(?:chrome|browser)\s*[.[]|\.innerHTML\s*=|\b(?:localStorage|sessionStorage)\b|document\.cookie|new\s+(?:(?:window|globalThis)\.)?(?:AudioContext|OfflineAudioContext|Audio)\s*\(|dispatchEvent\s*\(/.test(
       code,
     )
   )

@@ -1,0 +1,13 @@
+# Snowfall implementation plan
+
+Written before implementation, 2026-11-15.
+
+Behavior: Let a quiet field of snow drift over the page until stopped. Scope: viewport; lifetime: continuous. Target selection stays in the shared runtime. No effect dispatches host events or reads editable fields.
+
+Research: https://devbubba.github.io/Bookmarklets/. Supplied historical collection URL and its apparent GitHub repository returned 404 on 2026-11-15. Original author/version/license therefore remain unverified. The change-request behavioral description is the design source, not third-party executable code. All TypeScript, SVG and synthesized audio will be newly authored. No original bookmarklet is downloaded, executed or adapted. Canvas and tracked Web Animations are preferred to a library or live DOM clones.
+
+Limits: One canvas, sixty-four deterministic flakes at most, 30 Hz rendering, capped 1600 by 1000 backing store. Reduced motion renders once with no RAF. Resize redraws bounds.
+
+Audio: original low-gain activation cue in audio.json, delivered by the shared audio service. No local context or loop. Visuals still function with unavailable/muted audio.
+
+Verification: contract/model tests, strict TypeScript, tracked resource cleanup, and host-state assertions. Actual-browser visual/subjective-audio acceptance remains pending because native browser startup is blocked by restricted process sockets. Review-pending metadata must remain honest.

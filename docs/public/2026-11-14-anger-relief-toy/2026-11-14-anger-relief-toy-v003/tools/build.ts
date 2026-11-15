@@ -1,6 +1,6 @@
 import { mkdir, readdir, readFile, writeFile, cp, rm, stat } from "node:fs/promises";
 import type { Descriptor } from "../src/sdk/types";
-import { validateDescriptor } from "./metadata";
+import { validateDescriptor, validateAudio } from "./metadata";
 import { auditFeature } from "./security";
 import { validateIcon } from "./icons";
 const root = new URL("../", import.meta.url).pathname;
@@ -22,6 +22,12 @@ for (const dir of (await readdir("src/effects")).sort()) {
   const art = await readFile(`src/effects/${dir}/icon.svg`, "utf8");
   validateIcon(art, dir);
   data.iconSvg = art;
+  const sound: unknown = JSON.parse(await readFile(`src/effects/${dir}/audio.json`, "utf8"));
+  validateAudio(sound);
+  if (!data.capabilities.audio) throw new Error(`Missing audio capability: ${dir}`);
+  data.audioProfile = sound;
+  if (process.argv.includes("--release") && data.status !== "verified")
+    throw new Error(`Native review required: ${dir}`);
   entries.push(data);
 }
 if (!entries.length) throw new Error("Empty registry");
@@ -64,7 +70,7 @@ await cp("src/ui/style.css", "dist/ui.css");
 const manifest = {
   manifest_version: 3,
   name: "Anger Relief Toy",
-  version: "0.2.0",
+  version: "0.3.0",
   description: "Equip playful tools, use them repeatedly, and put them away to restore the page.",
   minimum_chrome_version: "120",
   permissions: ["activeTab", "scripting", "storage"],
@@ -83,7 +89,7 @@ const manifest = {
   commands: {
     "open-wheel": {
       suggested_key: { default: "Alt+Shift+A" },
-      description: "Open favorite action wheel",
+      description: "Open rotating action dial",
     },
   },
   content_security_policy: {
@@ -112,7 +118,7 @@ await writeFile(
   "evidence/bundle-sizes.json",
   JSON.stringify(
     {
-      version: "0.2.0",
+      version: "0.3.0",
       runtimeDependencies: 0,
       sizes,
       totalJavaScriptBytes: Object.values(sizes).reduce((a, b) => a + b, 0),

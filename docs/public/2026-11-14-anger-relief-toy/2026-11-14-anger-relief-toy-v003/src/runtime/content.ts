@@ -13,10 +13,13 @@ import { box } from "../sdk/visual";
 import { mountCatalog, preferences } from "../ui/catalog";
 import { button, el, focusLoop, icon } from "../ui/dom";
 import { cursorPosition, draggable, type Point } from "../ui/position";
+import { dialAudio } from "../ui/dial-audio";
 import { wheel } from "../ui/wheel";
 import css from "../ui/style.css" with { type: "text" };
 import { atPoint, eligible, visibleTargets } from "./targeting";
 import { Diagnostics } from "./diagnostics";
+import { AudioService } from "../audio/service";
+import { MiddleHold } from "./middle-hold";
 import { Invocations } from "./invocations";
 type ToolState =
   "unequipped" | "switching" | "loading" | "equipped" | "targeting" | "suspended" | "failed";
@@ -40,19 +43,48 @@ class Runtime implements RuntimeBridge {
   private catalogPosition: Point | undefined;
   private hud: HTMLElement | undefined;
   private cue: HTMLElement | undefined;
-  private capture: HTMLElement | undefined;
   private outline: HTMLElement | undefined;
   private candidate: HTMLElement | null = null;
   private pointer: Point | undefined;
+  private resumeContinuous = false;
   private diagnostics = new Diagnostics(
     (id) => catalog.find((e) => e.id === id)?.version ?? "unknown",
+  );
+  private ready: Promise<void> = Promise.resolve();
+  private audio = new AudioService();
+  private hold = new MiddleHold(
+    () => {
+      void this.showWheel();
+    },
+    () => this.audio.unlock(),
   );
   private execution = new Invocations(
     () => this.node("stage"),
     () => !this.menu && this.state !== "suspended",
     () => this.updateHUD(),
     this.diagnostics,
+    this.audio,
   );
+  constructor() {
+    this.ready = this.refreshPreferences();
+    for (const name of ["popstate", "hashchange"])
+      window.addEventListener(name, () => this.shutdown());
+    if ("navigation" in window)
+      (window.navigation as EventTarget).addEventListener("navigate", () => this.shutdown());
+    window.addEventListener("pagehide", (event) => {
+      this.shutdown();
+      if (!(event as PageTransitionEvent).persisted) {
+        this.hold.dispose();
+        this.audio.dispose();
+      }
+    });
+  }
+  async refreshPreferences(): Promise<void> {
+    const prefs = await preferences();
+    this.audio.configure(prefs.audio);
+    this.hold.configure(prefs.middleHold);
+    this.updateMute();
+  }
   register(id: string, module: EffectModule): void {
     if (
       !catalog.some((e) => e.id === id) ||
@@ -72,14 +104,24 @@ class Runtime implements RuntimeBridge {
     const style = document.createElement("style");
     style.textContent = css;
     this.shadow.append(style);
+    this.shadow.addEventListener(
+      "pointerdown",
+      (e) => {
+        if (e.isTrusted) this.audio.unlock();
+      },
+      true,
+    );
+    this.shadow.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.isTrusted && ["Enter", " "].includes((e as KeyboardEvent).key)) this.audio.unlock();
+      },
+      true,
+    );
     document.documentElement.append(this.host);
     const r = new Resources(() => this.putAway("error"));
     this.shell = r;
     r.listen(window, "keydown", (event) => this.key(event as KeyboardEvent), { capture: true });
-    for (const name of ["pagehide", "popstate", "hashchange"])
-      r.listen(window, name, () => this.shutdown());
-    if ("navigation" in window)
-      r.listen(window.navigation as EventTarget, "navigate", () => this.shutdown());
     r.listen(window, "resize", () => this.geometry());
     r.listen(
       document,
@@ -92,13 +134,18 @@ class Runtime implements RuntimeBridge {
     r.listen(document, "visibilitychange", () => {
       if (!this.equipped) return;
       if (document.hidden) {
+        this.hold.cancel();
+        this.audio.suspend();
+        this.resumeContinuous = this.execution.state === "continuous";
         this.state = "suspended";
         this.execution.end("shutdown");
         this.syncInput();
       } else {
         this.state = this.equipped.descriptor.scope === "element" ? "targeting" : "equipped";
         this.syncInput();
-        if (this.equipped.descriptor.lifetime.class === "continuous") this.executeAutomatic();
+        if (this.resumeContinuous && this.equipped.descriptor.lifetime.class === "continuous")
+          this.executeAutomatic();
+        this.resumeContinuous = false;
       }
       this.updateHUD();
     });
@@ -120,17 +167,21 @@ class Runtime implements RuntimeBridge {
   private shutdown(): void {
     this.closeMenu(false);
     this.putAway("navigation");
+    this.hold.cancel();
+    this.audio.suspend();
     this.catalogPosition = undefined;
     this.releaseShell();
   }
   putAway(reason: StopReason = "user"): void {
     ++this.epoch;
+    this.hold.cancel();
+    this.resumeContinuous = false;
     this.execution.end(reason);
+    this.audio.stopAll();
     this.equipped?.resources.dispose();
     this.equipped = undefined;
     this.hud = undefined;
     this.cue = undefined;
-    this.capture = undefined;
     this.outline = undefined;
     this.candidate = null;
     this.pointer = undefined;
@@ -158,6 +209,7 @@ class Runtime implements RuntimeBridge {
     epoch: number;
     container: HTMLElement;
   } {
+    this.hold.cancel();
     this.closeMenu(false);
     this.surface();
     this.menu = kind;
@@ -189,6 +241,7 @@ class Runtime implements RuntimeBridge {
     }
   }
   async showWheel(): Promise<void> {
+    await this.ready;
     if (this.menu === "wheel") {
       this.closeMenu();
       return;
@@ -197,9 +250,7 @@ class Runtime implements RuntimeBridge {
     r.node(container);
     const [prefs, shortcut] = await Promise.all([preferences(), this.assignedShortcut()]);
     if (epoch !== this.menuEpoch) return;
-    const ids = [
-      ...new Set([...prefs.favorites, ...prefs.recent, ...catalog.map((e) => e.id)]),
-    ].slice(0, 8);
+    const ids = [...new Set([...prefs.favorites, ...prefs.recent, ...catalog.map((e) => e.id)])];
     const entries = ids.map((id) => catalog.find((e) => e.id === id)!);
     const dialog = wheel(
       entries,
@@ -212,12 +263,15 @@ class Runtime implements RuntimeBridge {
         void this.showCatalog();
       },
       () => this.closeMenu(),
+      r,
+      this.audio.scope(dialAudio, "navigation"),
     );
     container.append(dialog);
-    dialog.querySelector<HTMLElement>("[aria-pressed=true],button")?.focus();
+    dialog.querySelector<HTMLElement>(".wheel-sector[tabindex='0']")?.focus();
     this.updateHUD();
   }
   async showCatalog(): Promise<void> {
+    await this.ready;
     const { resources: r, epoch, container } = this.openMenu("catalog");
     r.node(container);
     const dialog = this.node("art-dialog", container);
@@ -235,6 +289,9 @@ class Runtime implements RuntimeBridge {
       diagnostics: async () => this.report(),
       clearDiagnostics: () => this.diagnostics.clear(),
       equipped: () => this.equipped?.descriptor.id,
+      changed: () => {
+        void this.refreshPreferences();
+      },
     });
     if (epoch !== this.menuEpoch) return;
     const handle = app.querySelector<HTMLElement>(".brand")!;
@@ -256,6 +313,9 @@ class Runtime implements RuntimeBridge {
   async choose(id: string, rawOptions: unknown): Promise<void> {
     const descriptor = catalog.find((e) => e.id === id);
     if (!descriptor) throw new Error("UNKNOWN_EFFECT");
+    const request = ++this.epoch;
+    await this.ready;
+    if (request !== this.epoch) return;
     this.closeMenu(false);
     this.putAway("replacement");
     this.surface();
@@ -308,8 +368,9 @@ class Runtime implements RuntimeBridge {
     const art = el("span", "hud-icon");
     art.innerHTML = icon(this.equipped!.descriptor, 38);
     const copy = el("div", "hud-copy");
-    copy.append(el("strong", "hud-name", this.equipped!.descriptor.name), el("span", "hud-status"));
-    copy.setAttribute("role", "status");
+    const name = el("strong", "hud-name", this.equipped!.descriptor.name);
+    name.title = this.equipped!.descriptor.name;
+    copy.append(name);
     const switchButton = button(
       "Switch",
       () => {
@@ -319,8 +380,27 @@ class Runtime implements RuntimeBridge {
     );
     const end = button("End effect", () => this.execution.end(), "end-effect");
     const put = button("Put away", () => this.putAway(), "put-away");
-    const activate = button("Use tool", () => this.executeAutomatic(), "activate-effect");
-    hud.append(art, copy, switchButton, activate, end, put);
+    hud.append(art, copy, switchButton, end, put);
+    const mute = r.node(this.node("audio-control"));
+    mute.append(
+      button(
+        "Mute",
+        () => {
+          this.audio.unlock();
+          void preferences()
+            .then(async (prefs) => {
+              prefs.audio.muted = !prefs.audio.muted;
+              this.audio.configure(prefs.audio);
+              this.audio.unlock();
+              this.updateMute();
+              await chrome.storage.local.set({ preferences: prefs });
+            })
+            .catch(() => {});
+        },
+        "mute-audio",
+      ),
+    );
+    this.updateMute();
     this.updateHUD();
     void this.assignedShortcut().then((value) => {
       if (!r.closed) {
@@ -332,35 +412,29 @@ class Runtime implements RuntimeBridge {
   }
   private updateHUD(): void {
     if (!this.hud || !this.equipped) return;
-    const d = this.equipped.descriptor;
-    const message =
-      this.state === "loading"
-        ? "Loading tool..."
-        : this.state === "failed"
-          ? "Could not load. Switch tools to retry."
-          : this.state === "suspended"
-            ? "Suspended while this tab is hidden"
-            : this.execution.state === "failed"
-              ? "Effect ended safely. Choose another target."
-              : d.scope === "element"
-                ? "Click an element. Tab targets; Enter uses."
-                : this.execution.state === "idle"
-                  ? "Effect ended. Switch or put away."
-                  : d.interaction === "pointer"
-                    ? "Move the pointer or use arrow keys."
-                    : "Active until you end it or put it away.";
-    this.hud.querySelector(".hud-status")!.textContent = message;
     const end = this.hud.querySelector<HTMLButtonElement>(".end-effect")!;
-    end.hidden = this.execution.state === "idle" || this.execution.state === "failed";
-    this.hud.querySelector<HTMLButtonElement>(".activate-effect")!.hidden =
-      d.scope === "element" ||
-      !["idle", "failed"].includes(this.execution.state) ||
-      this.state === "loading" ||
-      this.state === "suspended";
+    end.disabled = ["idle", "failed"].includes(this.execution.state);
+    if (this.state === "failed" || this.execution.state === "failed")
+      this.notify("Tool could not run. Switch tools to retry.");
   }
+  private updateMute(): void {
+    const mute = this.shadow?.querySelector<HTMLButtonElement>(".mute-audio");
+    if (!mute) return;
+    const muted = this.audio.report().muted;
+    mute.textContent = muted ? "Unmute" : "Mute";
+    mute.setAttribute("aria-label", muted ? "Unmute all sounds" : "Mute all sounds");
+    mute.setAttribute("aria-pressed", String(muted));
+  }
+  private notify(message: string): void {
+    if (!this.equipped || this.shadow?.querySelector(".toast")) return;
+    const toast = this.equipped.resources.node(this.node("toast"));
+    toast.setAttribute("role", "status");
+    toast.textContent = message;
+    this.equipped.resources.timeout(() => toast.remove(), 4000);
+  }
+
   private syncInput(): void {
     const hidden = !!this.menu || this.state === "suspended" || this.state === "loading";
-    if (this.capture) this.capture.hidden = hidden;
     if (this.cue) this.cue.hidden = hidden || !this.pointer;
     if (this.outline) this.outline.hidden = hidden || !this.candidate;
   }
@@ -370,26 +444,34 @@ class Runtime implements RuntimeBridge {
     this.syncInput();
   }
   private resolve(x: number, y: number): HTMLElement | null {
-    if (this.capture) this.capture.style.pointerEvents = "none";
-    const hit = atPoint(x, y);
-    if (this.capture) this.capture.style.pointerEvents = "auto";
-    return hit;
+    return atPoint(x, y);
   }
   private targeting(r: Resources): void {
-    const capture = r.node(this.node("capture"));
     const outline = r.node(this.node("highlight"));
     const cue = r.node(this.node("cursor-cue"));
     cue.innerHTML = icon(this.equipped!.descriptor, 32);
-    capture.tabIndex = -1;
-    this.capture = capture;
     this.outline = outline;
     this.cue = cue;
     this.syncInput();
-    if (this.state !== "suspended") capture.focus({ preventScroll: true });
+    // Observe real page pointer events. A hit-test shield would swallow native middle-click links.
+    // Only deliberate primary-pointer actions are intercepted; keyboard activation remains native.
+    const available = (event: Event): boolean => {
+      if (this.menu || this.state !== "targeting") return false;
+      const path = event.composedPath();
+      const own = path.some(
+        (node) => node instanceof Element && node.hasAttribute("data-art-root"),
+      );
+      return !own;
+    };
     r.listen(
-      capture,
+      window,
       "pointermove",
       (event) => {
+        if (!available(event)) {
+          this.pointer = undefined;
+          this.mark(null);
+          return;
+        }
         const e = event as PointerEvent;
         this.pointer = { x: e.clientX, y: e.clientY };
         const point = cursorPosition(e.clientX, e.clientY);
@@ -397,43 +479,42 @@ class Runtime implements RuntimeBridge {
         cue.style.top = `${point.y}px`;
         this.mark(this.resolve(e.clientX, e.clientY));
       },
-      { passive: true },
+      { capture: true, passive: true },
     );
-    for (const name of [
-      "pointerdown",
-      "pointerup",
-      "mousedown",
-      "mouseup",
-      "dblclick",
-      "contextmenu",
-    ])
+    for (const name of ["pointerdown", "pointerup", "mousedown", "mouseup", "dblclick"]) {
       r.listen(
-        capture,
+        window,
         name,
         (event) => {
+          if (!available(event) || (event as MouseEvent).button !== 0) return;
           event.preventDefault();
           event.stopImmediatePropagation();
+          if (name === "pointerdown" && event.isTrusted) this.audio.unlock();
         },
         { capture: true },
       );
+    }
     r.listen(
-      capture,
+      window,
       "click",
       (event) => {
+        const e = event as MouseEvent;
+        if (!available(event) || e.button !== 0 || e.detail === 0) return;
         event.preventDefault();
         event.stopImmediatePropagation();
-        const e = event as MouseEvent;
-        if (e.button !== 0) return;
+        if (event.isTrusted) this.audio.unlock();
         this.execution.end("replacement");
         this.use(this.resolve(e.clientX, e.clientY), e.clientX, e.clientY);
       },
       { capture: true },
     );
-    r.listen(capture, "pointerleave", () => {
+    r.listen(window, "pointerout", (event) => {
+      if ((event as PointerEvent).relatedTarget) return;
       this.pointer = undefined;
       this.mark(null);
     });
   }
+
   private use(element: HTMLElement | null, x: number, y: number): void {
     const tool = this.equipped;
     if (!tool || this.menu || this.state !== "targeting") return;
@@ -461,8 +542,7 @@ class Runtime implements RuntimeBridge {
         : { kind: "viewport", document };
     if (target.kind === "document" && !target.elements.length) {
       this.execution.end();
-      const status = this.hud?.querySelector(".hud-status");
-      if (status) status.textContent = "No visible targets. Scroll to content, then use the tool.";
+      this.notify("No visible targets. Scroll to content, then reselect the tool.");
       return;
     }
     this.execution.run(
@@ -493,45 +573,8 @@ class Runtime implements RuntimeBridge {
       if (dialog) focusLoop(dialog, e, this.shadow?.activeElement ?? null);
       return;
     }
-    if (!this.equipped || this.state !== "targeting") return;
-    if (e.key === "Tab") {
-      const targets = visibleTargets();
-      const controls = [...this.hud!.querySelectorAll<HTMLButtonElement>("button")].filter(
-        (n) => !n.hidden,
-      );
-      const active = this.shadow?.activeElement;
-      const current = this.candidate ?? (active instanceof HTMLElement ? active : null);
-      const list: HTMLElement[] = [...targets, ...controls];
-      if (!list.length) return;
-      const index = list.indexOf(current as HTMLElement);
-      const step = e.shiftKey ? -1 : 1;
-      const next =
-        list[
-          index < 0
-            ? e.shiftKey
-              ? list.length - 1
-              : 0
-            : (index + step + list.length) % list.length
-        ]!;
-      if (controls.includes(next as HTMLButtonElement)) {
-        this.mark(null);
-        next.focus();
-      } else {
-        (this.shadow?.activeElement as HTMLElement | null)?.blur();
-        this.mark(next);
-      }
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    } else if (e.key === "Enter" || e.key === " ") {
-      if (this.hud?.contains(this.shadow?.activeElement ?? null)) return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      if (e.key === "Enter" && this.candidate) {
-        const rect = this.candidate.getBoundingClientRect();
-        this.use(this.candidate, rect.left + rect.width / 2, rect.top + rect.height / 2);
-      }
-    }
   }
+
   report(): unknown {
     return {
       state: this.state,
@@ -542,6 +585,7 @@ class Runtime implements RuntimeBridge {
       resources: this.execution.resources,
       sessionResources: this.equipped?.resources.size ?? 0,
       loaded: [...this.modules.keys()],
+      audio: this.audio.report(),
       events: this.diagnostics.report(),
     };
   }
@@ -560,6 +604,10 @@ if (!globalThis.__angerReliefToyV1) {
     ) {
       respond({ ok: false, error: "UNSUPPORTED_DOCUMENT" });
       return false;
+    }
+    if (message.type === "preferences-changed") {
+      void runtime.refreshPreferences().then(() => respond({ ok: true }));
+      return true;
     }
     if (message.type === "select" && typeof message.id === "string") {
       void runtime

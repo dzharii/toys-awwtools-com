@@ -24,6 +24,7 @@ export default {
         for (const b of bodies) b.surface.style.transform = "translateY(5px)";
         return;
       }
+      let lastCollision = -200;
       c.resources.frame((_t, dt) => {
         for (const b of bodies) {
           if (b.rest) continue;
@@ -31,6 +32,10 @@ export default {
           b.y += b.v * dt;
           if (b.y >= b.floor) {
             b.y = b.floor;
+            if (_t - lastCollision > 130 && Math.abs(b.v) > 0.12) {
+              c.audio?.play("collision", { strength: Math.min(1, Math.abs(b.v)) });
+              lastCollision = _t;
+            }
             b.v *= -0.42;
             if (Math.abs(b.v) < 0.09) b.rest = true;
           }
