@@ -1,5 +1,13 @@
 # Verification for change request 004
 
+## Windows build portability (2026-11-16)
+
+The development build and browser-test entry point convert their project file URLs with `fileURLToPath` before changing directory. This fixes the Windows `/C:/...` startup failure and decodes checkout names containing spaces, `#` or `%`. The build regression copies the trusted project into a disposable local directory with those characters, invokes the build from another working directory, checks the generated extension files and removes the copy.
+
+On Windows ARM64 with Bun 1.4.4, the development build produced all 18 effect bundles and all 139 tests passed. This build-only repair does not establish native visual or audio acceptance or change the release review gate. The formatting check could not run because Prettier was missing; frozen dependency restoration returned HTTP 404 from the configured package feed for `prettier-3.10.1.tgz` and `ws-8.23.0.tgz`. Dependency versions and the lockfile were not changed.
+
+## Existing feature verification
+
 The final verification and source snapshot are recorded in evidence/004/verification.json and source-manifest.json. Component checks execute trusted packaged content and independently injected effect bundles in Happy DOM, with virtual time, rendering-call instrumentation and resource assertions. They verify integration but do not measure native layout, pixels, audio output or hardware performance.
 
 Native Playwright was attempted again with the installed browser, packaged dist, persistent extension profile and synthetic discussion fixture. The environment initially lacked /tmp; a writable workspace temporary directory resolved that setup error. Chromium then failed at process_singleton_posix.cc:297 with socket() failed: Operation not permitted (1), followed by a crashpad ptrace restriction. evidence/004/browser-result.json preserves the complete error. No sandbox escalation or security workaround was attempted.

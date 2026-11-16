@@ -2,9 +2,10 @@
 import { chromium, expect, type BrowserContext, type Page } from "playwright/test";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { catalog } from "../src/generated/catalog";
 import { defaults } from "../src/sdk/validation";
-const root = new URL("../", import.meta.url).pathname;
+const root = fileURLToPath(new URL("../", import.meta.url));
 process.chdir(root);
 await mkdir(".temp", { recursive: true });
 if (!existsSync(process.env.TMPDIR ?? "/tmp")) process.env.TMPDIR = `${root}.temp`;

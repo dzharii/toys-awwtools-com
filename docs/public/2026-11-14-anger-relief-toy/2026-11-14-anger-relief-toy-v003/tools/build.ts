@@ -1,9 +1,10 @@
 import { mkdir, readdir, readFile, writeFile, cp, rm, stat } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import type { Descriptor } from "../src/sdk/types";
 import { validateDescriptor, validateAudio } from "./metadata";
 import { auditFeature } from "./security";
 import { validateIcon } from "./icons";
-const root = new URL("../", import.meta.url).pathname;
+const root = fileURLToPath(new URL("../", import.meta.url));
 process.chdir(root);
 await mkdir("src/generated", { recursive: true });
 await mkdir(".build", { recursive: true });
